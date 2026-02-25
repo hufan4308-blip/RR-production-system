@@ -68,7 +68,8 @@ function loadData() {
   if (!fs.existsSync(DATA_FILE)) return initData();
   try {
     const data = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
-    if (!data.material_prices) data.material_prices = DEFAULT_MATERIAL_PRICES.slice();
+    if (!data.material_prices)       data.material_prices = DEFAULT_MATERIAL_PRICES.slice();
+    if (!data.material_requisitions) data.material_requisitions = [];
     return data;
   }
   catch (e) { return initData(); }
@@ -81,6 +82,7 @@ function initData() {
     spray_orders: [],    spray_items: [],
     problems: [],
     material_prices: DEFAULT_MATERIAL_PRICES.slice(),
+    material_requisitions: [],
     nextId: 1
   };
 }
@@ -280,6 +282,58 @@ app.get('/api/material-stats', (req, res) => {
     stats[item.material].total_amount        += +(item.actual_amount_hkd || 0);
   });
   res.json(Object.values(stats));
+});
+
+// ─── 领料单 ───────────────────────────────────────────────────────────────────
+app.get('/api/requisitions', (req, res) => {
+  const data = loadData();
+  let list = data.material_requisitions || [];
+  if (req.query.order_id) list = list.filter(r => r.order_id === +req.query.order_id);
+  res.json(list.sort((a, b) => b.id - a.id));
+});
+
+app.post('/api/requisitions', (req, res) => {
+  try {
+    const data = loadData();
+    const now = new Date();
+    const dateStr = now.toISOString().slice(0, 10).replace(/-/g, '');
+    const dayReqs = (data.material_requisitions || []).filter(r => (r.req_number || '').includes(dateStr));
+    const seq = String(dayReqs.length + 1).padStart(3, '0');
+    const requisition = {
+      id: data.nextId++,
+      req_number: `LL-${dateStr}-${seq}`,
+      date: req.body.date || now.toISOString().slice(0, 10),
+      order_id: req.body.order_id ? +req.body.order_id : null,
+      order_number: req.body.order_number || '',
+      material: req.body.material || '',
+      requested_weight_kg: +(req.body.requested_weight_kg) || 0,
+      applicant: req.body.applicant || '',
+      notes: req.body.notes || '',
+      status: '待出库',
+      issued_at: null,
+      created_at: now.toISOString()
+    };
+    data.material_requisitions.push(requisition);
+    saveData(data);
+    res.status(201).json(requisition);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.patch('/api/requisitions/:id/status', (req, res) => {
+  const data = loadData();
+  const r = (data.material_requisitions || []).find(r => r.id === +req.params.id);
+  if (!r) return res.status(404).json({ error: '未找到' });
+  r.status = req.body.status;
+  if (req.body.status === '已出库') r.issued_at = new Date().toISOString();
+  saveData(data);
+  res.json(r);
+});
+
+app.delete('/api/requisitions/:id', (req, res) => {
+  const data = loadData();
+  data.material_requisitions = (data.material_requisitions || []).filter(r => r.id !== +req.params.id);
+  saveData(data);
+  res.json({ success: true });
 });
 
 // ─── 统计 ─────────────────────────────────────────────────────────────────────

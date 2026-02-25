@@ -177,12 +177,18 @@ function viewOrder(id) {
         const unitPrice = _injMatPrices[it.material] || 0;
         return `
         <tr data-item-id="${it.id}" data-unit-price="${unitPrice}">
-          <td class="text-center">${it.seq_no || idx+1}</td>
           <td>${it.mold_id||''}</td>
           <td>${it.mold_name||''}</td>
-          <td><strong>${it.material||''}</strong>${unitPrice ? `<br><small class="text-muted">${unitPrice} HKD/磅</small>` : ''}</td>
+          <td><strong>${it.material||''}</strong>${unitPrice ? `<br><small class="text-muted">${unitPrice} HKD/KG</small>` : ''}</td>
+          <td>${it.color||''}</td>
+          <td>${it.pigment_no||it.color_code||''}</td>
           <td class="text-center">${it.quantity||''}</td>
-          <td class="text-center">${it.total_weight_kg||''}</td>
+          <td class="text-center">${it.shoot_qty||it.color_weight_g||''}</td>
+          <td class="text-center">${it.gross_weight_g||it.total_weight_kg||''}</td>
+          <td class="text-center">${it.required_material_kg||''}</td>
+          <td>${it.mold_return_time||it.mold_fee_time||''}</td>
+          <td>${it.completion_time||''}</td>
+          <td>${it.notes||''}</td>
           <td><input class="form-control form-control-sm" name="regrind_no"
               value="${it.regrind_no||''}" placeholder="回胶头单号" style="min-width:80px"></td>
           <td><input type="number" class="form-control form-control-sm" name="regrind_weight_kg"
@@ -218,11 +224,12 @@ function viewOrder(id) {
           <table class="table table-bordered table-sm" style="font-size:.82rem">
             <thead>
               <tr class="text-center">
-                <th colspan="6" style="background:#fff3cd">工程填写（只读）</th>
+                <th colspan="12" style="background:#fff3cd">工程填写（只读）</th>
                 <th colspan="6" style="background:#cfe2ff">啤机部填写</th>
               </tr>
               <tr class="table-dark text-center" style="font-size:.78rem">
-                <th>序号</th><th>模具编号</th><th>模具简称</th><th>原料/单价</th><th>啤数(啤)</th><th>所需用料(KG)</th>
+                <th>工模编号</th><th>工模名称</th><th>原料/单价</th><th>颜色</th><th>色粉编号</th><th>件数/套数</th>
+                <th>数量(啤)</th><th>整啤毛重(g)</th><th>所需用料(KG)</th><th>模具回厂时间</th><th>啤办完成时间</th><th>备注</th>
                 <th>回胶头单号</th><th>回胶头重量(KG)</th>
                 <th>领原料单号</th><th>领料重量(KG)</th>
                 <th>实际用料(KG)</th><th>用料金额(HKD)</th>

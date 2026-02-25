@@ -8,8 +8,9 @@
   <style>
     body { font-family: 'Microsoft YaHei', '微软雅黑', sans-serif; background: #fff; }
     .print-wrapper { max-width: 1100px; margin: 0 auto; padding: 20px; }
+    @media print { .print-wrapper { padding: 8px; max-width: 100%; } }
     .print-header { text-align: center; margin-bottom: 10px; }
-    .print-header .company-name { font-size: 22pt; font-weight: bold; }
+    .print-header .company-name { font-size: 18pt; font-weight: bold; letter-spacing: 1px; color: #000; }
     .print-header .doc-title { font-size: 14pt; margin: 4px 0; }
     .meta-row { display: flex; gap: 0; border: 1px solid #333; border-bottom: none; }
     .meta-cell { flex: 1; padding: 4px 8px; border-right: 1px solid #333; font-size: 10pt; }
@@ -76,68 +77,115 @@
 
     function renderInjection(o) {
       const items = o.items || [];
-      const isT = (t) => o.order_type === t;
-      let rows = items.map(it => `
-        <tr>
-          <td>${v(it.seq_no)}</td>
-          <td>${v(it.product_id)}</td>
+      const isHuaDeng = o.workshop === '华登车间';
+      const companyName = isHuaDeng ? '东莞华登塑胶制品有限公司' : '东莞兴信塑胶制品有限公司';
+      const logoSrc = isHuaDeng ? 'huadeng-logo.png' : 'xinxin-logo.png';
+      const logoHtml = `<img src="${logoSrc}" style="height:54px;width:auto;object-fit:contain" onerror="this.style.display='none'">`;
+      const stg = o.stage || '';
+      const op  = o.order_type || '';
+      // Check if stage and operation match
+      const isCk = (s, t) => stg === s && (op === t || (t === '啤办' && op === '啤板'));
+
+      // Pad to 20 rows
+      const allRows = [...items];
+      while (allRows.length < 20) allRows.push({});
+
+      const rows = allRows.map((it, i) => `
+        <tr style="height:22px">
+          <td>${i + 1}</td>
           <td>${v(it.mold_id)}</td>
           <td>${v(it.mold_name)}</td>
           <td>${v(it.material)}</td>
           <td>${v(it.color)}</td>
-          <td>${v(it.pigment_no)}</td>
+          <td>${v(it.pigment_no||it.color_code)}</td>
           <td>${v(it.quantity)}</td>
-          <td>${v(it.unit_weight)}</td>
-          <td>${v(it.return_time)}</td>
-          <td>${v(it.required_date)}</td>
-          <td class="notes-col">${v(it.notes)}</td>
+          <td>${v(it.shoot_qty||it.color_weight_g)}</td>
+          <td>${v(it.gross_weight_g||it.total_weight_kg)}</td>
+          <td>${v(it.required_material_kg)}</td>
+          <td>${v(it.mold_return_time||it.mold_fee_time)}</td>
+          <td>${v(it.completion_time)}</td>
         </tr>`).join('');
 
       return `
-        <div class="print-header">
-          <div class="company-name">东莞华登塑胶制品有限公司</div>
-          <div class="doc-title">试模/啤办通知书</div>
+        <div class="print-header" style="margin-bottom:6px">
+          <div style="display:flex;align-items:center;justify-content:center;gap:12px">
+            ${logoHtml}
+            <span class="company-name">${companyName}</span>
+          </div>
         </div>
         <div class="meta-row">
-          <div class="meta-cell"><span class="meta-label">由：</span><span class="meta-val">工程部</span></div>
-          <div class="meta-cell"><span class="meta-label">订单编号：</span><span class="meta-val">${v(o.order_number)}</span></div>
+          <div class="meta-cell"><span class="meta-label">TO:</span><span class="meta-val">${v(o.workshop)}</span></div>
+          <div class="meta-cell"><span class="meta-label">产品编号：</span><span class="meta-val">${v(o.order_number)}</span></div>
+          <div class="meta-cell"><span class="meta-label">订单编号：</span><span class="meta-val"></span></div>
           <div class="meta-cell"><span class="meta-label">日期：</span><span class="meta-val">${v(o.date)}</span></div>
         </div>
         <div class="checkbox-row">
           <div class="checkbox-group">
             <span class="checkbox-label">EP</span>
-            <span class="cb-item">${ck(false)}试模</span>
-            <span class="cb-item">${ck(false)}试色</span>
-            <span class="cb-item">${ck(false)}啤板</span>
+            <span class="cb-item">${ck(isCk('EP','试模'))}试模</span>
+            <span class="cb-item">${ck(isCk('EP','试色'))}试色</span>
+            <span class="cb-item">${ck(isCk('EP','啤办'))}啤办</span>
           </div>
           <div class="checkbox-group">
             <span class="checkbox-label">FEP</span>
-            <span class="cb-item">${ck(false)}试模</span>
-            <span class="cb-item">${ck(false)}试色</span>
-            <span class="cb-item">${ck(false)}啤板</span>
+            <span class="cb-item">${ck(isCk('FEP','试模'))}试模</span>
+            <span class="cb-item">${ck(isCk('FEP','试色'))}试色</span>
+            <span class="cb-item">${ck(isCk('FEP','啤办'))}啤办</span>
           </div>
           <div class="checkbox-group">
             <span class="checkbox-label">PP</span>
-            <span class="cb-item">${ck(isT('试模'))}试模</span>
-            <span class="cb-item">${ck(isT('试色'))}试色</span>
-            <span class="cb-item">${ck(isT('啤板'))}啤板</span>
+            <span class="cb-item">${ck(isCk('PP','试模'))}试模</span>
+            <span class="cb-item">${ck(isCk('PP','试色'))}试色</span>
+            <span class="cb-item">${ck(isCk('PP','啤办'))}啤办</span>
           </div>
           <div class="checkbox-group">
-            <span class="checkbox-label">其他</span>
-            <span class="cb-item">${ck(isT('啤办'))}初次试模</span>
+            <span class="checkbox-label">T0</span>
+            <span class="cb-item">${ck(isCk('T0','试模'))}试模</span>
+            <span class="cb-item">${ck(isCk('T0','试色'))}试色</span>
+            <span class="cb-item">${ck(isCk('T0','啤办'))}啤办</span>
           </div>
         </div>
         <div class="reason-row"><strong>原因：</strong>${v(o.reason)}</div>
         <table class="print-table">
           <thead>
             <tr>
-              <th>序号</th><th>产品编号</th><th>工模编号</th><th>工模名称</th>
-              <th>原料</th><th>颜色</th><th>色粉编号</th><th>数量(啤)</th>
-              <th>整啤重量(g)</th><th>回模时间</th><th>要求日期</th><th>备注</th>
+              <th style="width:28px">序号</th>
+              <th>工模编号</th>
+              <th>工模名称</th>
+              <th>原料</th>
+              <th>颜色</th>
+              <th>色粉编号</th>
+              <th>件数/<br>套数</th>
+              <th>数量<br>(啤)</th>
+              <th>整啤毛重<br>(g)</th>
+              <th>所需用料<br>(KG)</th>
+              <th>模具回厂<br>时间</th>
+              <th>啤办完成<br>时间</th>
             </tr>
           </thead>
           <tbody>${rows}</tbody>
-        </table>`;
+        </table>
+        <div style="margin-top:0;font-size:8pt;border:1px solid #333;border-top:none;padding:5px 8px;line-height:1.7">
+          <strong>备注：</strong><br>
+          1.试模请写报告。<br>
+          2.每套模镶10啤，不需剪水口，每啤分开装再装入一个大袋。<br>
+          3.啤机必须洗干净，不能有遗留黑点和杂色，顶针位不能有油污。<br>
+          4.胶件颜色必须对样样板或色牌，查调色啤办单注明颜色，需确知本人对色。<br>
+          5.胶件要摆放整齐，避免胶件划花。<br>
+          6.150吨及以下机型给3KG，150吨及以上机型给5KG。
+        </div>
+        <div style="margin-top:6px;font-size:9pt;border:1px solid #333;padding:5px 10px;display:flex;align-items:center;flex-wrap:wrap;gap:14px">
+          <strong>分发：</strong>
+          <span>${ck(false)} 经理室</span>
+          <span>${ck(false)} 计务部</span>
+          <span>${ck(false)} 啤机部</span>
+          <span>${ck(false)} 啤油部</span>
+          <span>${ck(false)} 装配部</span>
+        </div>
+        <div style="margin-top:10px;font-size:9pt;display:flex;padding:0 4px">
+          <span style="flex:1"><strong>申请：</strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+          <span style="flex:1;text-align:right"><strong>审核：</strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+        </div>`;
     }
 
     function renderSlush(o) {
