@@ -611,30 +611,25 @@ function addInjRow(it={}) {
   document.getElementById('injItemsBody').appendChild(tr);
 }
 
-// 在当前行下方插入同一工模的子件行
+// 在当前行下方插入同一工模的子件行（除工模名称外全部复制）
 function addInjSubRow(btn) {
   const curTr = btn.closest('tr');
-  const moldId = curTr.querySelector('[name="mold_id"]').value;
-  const material = curTr.querySelector('[name="material"]').value;
-  const color = curTr.querySelector('[name="color"]').value;
-  const pigment = curTr.querySelector('[name="pigment_no"]').value;
-  const mold_return = curTr.querySelector('[name="mold_return_time"]').value;
-  const completion = curTr.querySelector('[name="completion_time"]').value;
+  const g = name => (curTr.querySelector(`[name="${name}"]`) || {}).value || '';
   const tr = document.createElement('tr');
   tr.style.background = '#f8f9ff';
   tr.innerHTML = `
-    <td><input type="text" class="form-control form-control-sm" name="mold_id" value="${moldId}" style="background:#eef2ff;font-size:11px;color:#666"></td>
+    <td><input type="text" class="form-control form-control-sm" name="mold_id" value="${g('mold_id')}" style="background:#eef2ff;font-size:11px;color:#666"></td>
     <td>${inp('text','mold_name','')}</td>
-    <td>${matSel(material)}</td>
-    <td>${inp('text','color',color,'style="width:70px"')}</td>
-    <td>${inp('text','pigment_no',pigment,'style="width:70px"')}</td>
-    <td>${inp('number','quantity','','style="width:60px"')}</td>
-    <td>${inp('number','shoot_qty','','style="width:65px"')}</td>
-    <td>${inp('number','gross_weight_g','','style="width:70px"')}</td>
-    <td>${inp('number','required_material_kg','','style="width:70px"')}</td>
-    <td>${inp('text','mold_return_time',mold_return,'class="w-date"')}</td>
-    <td>${inp('text','completion_time',completion,'class="w-date"')}</td>
-    <td>${inp('text','notes','注塑')}</td>
+    <td>${matSel(g('material'))}</td>
+    <td>${inp('text','color',g('color'),'style="width:70px"')}</td>
+    <td>${inp('text','pigment_no',g('pigment_no'),'style="width:70px"')}</td>
+    <td>${inp('number','quantity',g('quantity'),'style="width:60px"')}</td>
+    <td>${inp('number','shoot_qty',g('shoot_qty'),'style="width:65px"')}</td>
+    <td>${inp('number','gross_weight_g',g('gross_weight_g'),'style="width:70px"')}</td>
+    <td>${inp('number','required_material_kg',g('required_material_kg'),'style="width:70px"')}</td>
+    <td>${inp('text','mold_return_time',g('mold_return_time'),'class="w-date"')}</td>
+    <td>${inp('text','completion_time',g('completion_time'),'class="w-date"')}</td>
+    <td>${inp('text','notes',g('notes'))}</td>
     <td>${injDelBtn()}</td>`;
   curTr.parentNode.insertBefore(tr, curTr.nextSibling);
 }
