@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>啤机部 - 生产订单</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="style.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+<nav class="navbar navbar-dark" style="background:#e67e22">
+  <div class="container-fluid">
+    <span class="navbar-brand"><i class="bi bi-box-seam me-2"></i>啤机部 — 生产任务单</span>
+    <div class="d-flex gap-2">
+      <a href="index.html"     class="nav-dept-link"><i class="bi bi-house me-1"></i>主页</a>
+      <a href="engineering.html" class="nav-dept-link">工程部</a>
+      <a href="slush.html"     class="nav-dept-link">搪胶部</a>
+      <a href="spray.html"     class="nav-dept-link">喷油部</a>
+      <a href="warehouse.html" class="nav-dept-link"><i class="bi bi-box2-heart me-1"></i>原料仓库</a>
+    </div>
+  </div>
+</nav>
+
+<div class="container-fluid mt-3">
+  <!-- 筛选 -->
+  <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+    <div class="status-filter d-flex flex-wrap gap-1">
+      <button class="btn btn-sm btn-outline-secondary active" onclick="filterStatus('',this)">全部</button>
+      <button class="btn btn-sm btn-warning"  onclick="filterStatus('待生产',this)">待生产</button>
+      <button class="btn btn-sm btn-info"     onclick="filterStatus('生产中',this)">生产中</button>
+      <button class="btn btn-sm btn-success"  onclick="filterStatus('已完成',this)">已完成</button>
+    </div>
+    <small class="text-muted"><i class="bi bi-arrow-clockwise me-1"></i>每30秒自动刷新</small>
+  </div>
+
+  <div class="card shadow-sm">
+    <div class="card-body p-0">
+      <div id="orderList"><div class="text-center p-4 text-muted">加载中...</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- 详情 Modal -->
+<div class="modal fade" id="detailModal" tabindex="-1">
+  <div class="modal-dialog modal-fullscreen">
+    <div class="modal-content">
+      <div class="modal-header" style="background:#e67e22;color:#fff">
+        <h5 class="modal-title" id="detailTitle">啤办单详情</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="detailBody"></div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+        <button class="btn btn-info text-white" id="saveMachineBtn"><i class="bi bi-save me-1"></i>保存啤机数据</button>
+        <button class="btn btn-outline-primary" id="detailPrintBtn"><i class="bi bi-printer me-1"></i>打印</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 问题反馈 Modal -->
+<div class="modal fade" id="problemModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title"><i class="bi bi-exclamation-triangle-fill me-2"></i>问题反馈 — <span id="pmOrderNum"></span></h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div id="pmProblemsList" class="mb-3"></div>
+        <hr class="my-2">
+        <label class="form-label fw-bold">反馈新问题</label>
+        <textarea class="form-control" id="pmDescription" rows="3" placeholder="请描述具体问题，例如：尺寸不对、颜色偏差、模具损坏..."></textarea>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+        <button class="btn btn-danger" onclick="submitProblem()">
+          <i class="bi bi-exclamation-triangle me-1"></i>提交问题
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+let allOrders = [];
+let problemsMap = {};  // order_id → unresolved count
+let currentFilter = '';
+
+const statusBadge = s => ({
+  '待生产': '<span class="badge badge-pending">待生产</span>',
+  '生产中': '<span class="badge badge-progress">生产中</span>',
+  '已完成': '<span class="badge badge-done">已完成</span>',
+  '已取消': '<span class="badge bg-secondary">已取消</span>'
+}[s] || `<span class="badge bg-secondary">${s}</span>`);
+
+function filterStatus(status, el) {
+  currentFilter = status;
+  document.querySelectorAll('.status-filter .btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  renderOrders(currentFilter ? allOrders.filter(o => o.status === currentFilter) : allOrders);
+}
+
+function loadOrders() {
+  Promise.all([
+    fetch('/api/injection').then(r => r.json()),
+    fetch('/api/problems?type=injection').then(r => r.json())
+  ]).then(([orders, problems]) => {
+    allOrders = orders;
+    problemsMap = {};
+    problems.filter(p => p.status === '待处理').forEach(p => {
+      problemsMap[p.order_id] = (problemsMap[p.order_id] || 0) + 1;
+    });
+    renderOrders(currentFilter ? orders.filter(o => o.status === currentFilter) : orders);
+  }).catch(() => {
+    document.getElementById('orderList').innerHTML = '<div class="text-center p-4 text-danger">加载失败，请刷新页面</div>';
+  });
+}
+
+function renderOrders(orders) {
+  if (!orders.length) {
+    document.getElementById('orderList').innerHTML = `<div class="empty-state"><i class="bi bi-inbox"></i><p class="mt-2">暂无啤办任务</p></div>`;
+    return;
+  }
+  const rows = orders.map(o => `
+    <tr class="order-row" onclick="viewOrder(${o.id})">
+      <td><strong>${o.order_number || '-'}</strong></td>
+      <td>${o.date || '-'}</td>
+      <td>${o.order_type || '-'}</td>
+      <td>${o.workshop || '-'}</td>
+      <td>${o.supervisor || '-'}</td>
+      <td>${o.eng_name || '-'}</td>
+      <td>${o.reason || '-'}</td>
+      <td>
+        ${statusBadge(o.status)}
+        ${problemsMap[o.id] ? `<span class="badge bg-danger ms-1"><i class="bi bi-exclamation-triangle-fill me-1"></i>${problemsMap[o.id]}个问题</span>` : ''}
+      </td>
+      <td>
+        <div class="btn-group btn-group-sm">
+          ${handleBtn(o.id, o.status)}
+          <button class="btn btn-outline-danger" onclick="event.stopPropagation();openProblemModal(${o.id},'${(o.order_number||'').replace(/'/g,'')}')" title="问题反馈">
+            <i class="bi bi-exclamation-triangle"></i>
+          </button>
+          <button class="btn btn-outline-secondary" onclick="event.stopPropagation();printOrder(${o.id})">
+            <i class="bi bi-printer"></i>
+          </button>
+        </div>
+      </td>
+    </tr>`).join('');
+
+  document.getElementById('orderList').innerHTML = `
+    <table class="table table-hover table-sm mb-0">
+      <thead class="table-dark">
+        <tr><th>订单编号</th><th>日期</th><th>类型</th><th>车间</th><th>主管</th><th>跟进工程师</th><th>原因</th><th>状态</th><th>处理</th></tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+}
+
+let _currentMachineOrderId = null;
+let _injMatPrices = {};  // material → unit_price
+
+function viewOrder(id) {
+  _currentMachineOrderId = id;
+  fetch(`/api/injection/${id}`)
+    .then(r => r.json())
+    .then(order => {
+      document.getElementById('detailTitle').textContent = `啤办单 #${order.id} — ${order.order_number || ''}`;
+      document.getElementById('detailPrintBtn').onclick = () => printOrder(id);
+      document.getElementById('saveMachineBtn').onclick = () => saveMachineData(id);
+
+      const items = order.items || [];
+      const rows = items.map((it, idx) => {
+        const unitPrice = _injMatPrices[it.material] || 0;
+        return `
+        <tr data-item-id="${it.id}" data-unit-price="${unitPrice}">
+          <td class="text-center">${it.seq_no || idx+1}</td>
+          <td>${it.mold_id||''}</td>
+          <td>${it.mold_name||''}</td>
+          <td><strong>${it.material||''}</strong>${unitPrice ? `<br><small class="text-muted">${unitPrice} HKD/磅</small>` : ''}</td>
+          <td class="text-center">${it.quantity||''}</td>
+          <td class="text-center">${it.total_weight_kg||''}</td>
+          <td><input class="form-control form-control-sm" name="regrind_no"
+              value="${it.regrind_no||''}" placeholder="回胶头单号" style="min-width:80px"></td>
+          <td><input type="number" class="form-control form-control-sm" name="regrind_weight_kg"
+              value="${it.regrind_weight_kg||''}" step="0.01" style="width:75px" placeholder="0.00"></td>
+          <td><input class="form-control form-control-sm" name="receipt_no"
+              value="${it.receipt_no||''}" placeholder="领料单号" style="min-width:80px"></td>
+          <td><input type="number" class="form-control form-control-sm" name="collected_weight_kg"
+              value="${it.collected_weight_kg||''}" step="0.01" style="width:75px" placeholder="0.00"></td>
+          <td><input type="number" class="form-control form-control-sm" name="actual_weight_kg"
+              value="${it.actual_weight_kg||''}" step="0.01" style="width:75px" placeholder="0.00"
+              oninput="autoCalcAmt(this)"></td>
+          <td><input type="number" class="form-control form-control-sm bg-light" name="actual_amount_hkd"
+              value="${it.actual_amount_hkd||''}" step="0.01" style="width:85px" placeholder="自动计算"
+              title="= 实际用料 × 单价，也可手动修改"></td>
+        </tr>`;
+      }).join('');
+
+      document.getElementById('detailBody').innerHTML = `
+        <div class="row g-2 mb-3 p-2 rounded" style="background:#fff3e0">
+          <div class="col-md-2"><small class="text-muted">订单编号</small><div class="fw-bold">${order.order_number||'-'}</div></div>
+          <div class="col-md-2"><small class="text-muted">日期</small><div>${order.date||'-'}</div></div>
+          <div class="col-md-2"><small class="text-muted">类型</small><div>${order.order_type||'-'}</div></div>
+          <div class="col-md-2"><small class="text-muted">车间</small><div>${order.workshop||'-'}</div></div>
+          <div class="col-md-2"><small class="text-muted">主管</small><div>${order.supervisor||'-'}</div></div>
+          <div class="col-md-2"><small class="text-muted">状态</small><div>${statusBadge(order.status)}</div></div>
+          <div class="col-12"><small class="text-muted">原因</small><div>${order.reason||'-'}</div></div>
+        </div>
+        <p class="text-muted small mb-1">
+          <i class="bi bi-pencil-square me-1 text-info"></i>蓝色为啤机填写区 &nbsp;|&nbsp;
+          <i class="bi bi-calculator me-1 text-warning"></i>用料金额 = 实际用料(KG) × 原料单价，填完实际用料后自动计算
+        </p>
+        <div class="table-responsive">
+          <table class="table table-bordered table-sm" style="font-size:.82rem">
+            <thead>
+              <tr class="text-center">
+                <th colspan="6" style="background:#fff3cd">工程填写（只读）</th>
+                <th colspan="6" style="background:#cfe2ff">啤机部填写</th>
+              </tr>
+              <tr class="table-dark text-center" style="font-size:.78rem">
+                <th>序号</th><th>模具编号</th><th>模具简称</th><th>原料/单价</th><th>啤数(啤)</th><th>所需用料(KG)</th>
+                <th>回胶头单号</th><th>回胶头重量(KG)</th>
+                <th>领原料单号</th><th>领料重量(KG)</th>
+                <th>实际用料(KG)</th><th>用料金额(HKD)</th>
+              </tr>
+            </thead>
+            <tbody id="machineItemsBody">${rows}</tbody>
+          </table>
+        </div>`;
+
+      new bootstrap.Modal(document.getElementById('detailModal')).show();
+    });
+}
+
+function autoCalcAmt(input) {
+  const tr = input.closest('tr');
+  const unitPrice = parseFloat(tr.dataset.unitPrice) || 0;
+  const kg = parseFloat(input.value) || 0;
+  const amtInput = tr.querySelector('[name="actual_amount_hkd"]');
+  if (amtInput && unitPrice > 0) {
+    amtInput.value = kg > 0 ? (kg * unitPrice).toFixed(2) : '';
+  }
+}
+
+function saveMachineData(orderId) {
+  const updates = Array.from(document.getElementById('machineItemsBody').querySelectorAll('tr[data-item-id]')).map(tr => ({
+    id:                   +tr.dataset.itemId,
+    regrind_no:           tr.querySelector('[name="regrind_no"]').value,
+    regrind_weight_kg:    parseFloat(tr.querySelector('[name="regrind_weight_kg"]').value)    || null,
+    receipt_no:           tr.querySelector('[name="receipt_no"]').value,
+    collected_weight_kg:  parseFloat(tr.querySelector('[name="collected_weight_kg"]').value)  || null,
+    actual_weight_kg:     parseFloat(tr.querySelector('[name="actual_weight_kg"]').value)     || null,
+    actual_amount_hkd:    parseFloat(tr.querySelector('[name="actual_amount_hkd"]').value)    || null,
+  }));
+  fetch(`/api/injection/${orderId}/items`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ updates })
+  }).then(() => {
+    const t = document.createElement('div');
+    t.className = 'position-fixed bottom-0 end-0 p-3'; t.style.zIndex = 9999;
+    t.innerHTML = `<div class="toast show text-white bg-success border-0"><div class="d-flex"><div class="toast-body"><i class="bi bi-check-circle me-1"></i>数据已保存</div><button class="btn-close btn-close-white me-2 m-auto" onclick="this.closest('.position-fixed').remove()"></button></div></div>`;
+    document.body.appendChild(t); setTimeout(() => t.remove(), 3000);
+  });
+}
+
+let currentProblemOrderId = null;
+let currentProblemOrderNum = '';
+
+function openProblemModal(orderId, orderNumber) {
+  currentProblemOrderId = orderId;
+  currentProblemOrderNum = orderNumber;
+  document.getElementById('pmOrderNum').textContent = orderNumber || `#${orderId}`;
+  document.getElementById('pmDescription').value = '';
+  document.getElementById('pmProblemsList').innerHTML = '<div class="text-muted small">加载中...</div>';
+  new bootstrap.Modal(document.getElementById('problemModal')).show();
+
+  fetch(`/api/problems?type=injection&order_id=${orderId}`)
+    .then(r => r.json())
+    .then(list => {
+      if (!list.length) {
+        document.getElementById('pmProblemsList').innerHTML = '<div class="text-muted small">暂无历史问题记录</div>';
+        return;
+      }
+      document.getElementById('pmProblemsList').innerHTML = `
+        <p class="fw-bold mb-2">历史问题记录</p>
+        ${list.map(p => `
+          <div class="border rounded p-2 mb-2 ${p.status==='已解决' ? 'bg-light' : 'bg-warning-subtle'}">
+            <div class="d-flex justify-content-between align-items-start">
+              <span class="small">${p.description}</span>
+              <span class="badge ${p.status==='已解决' ? 'bg-success' : 'bg-danger'} ms-2 flex-shrink-0">${p.status}</span>
+            </div>
+            <div class="text-muted" style="font-size:.75rem;margin-top:4px">
+              ${p.reported_by} · ${p.created_at.replace('T',' ').slice(0,16)}
+            </div>
+          </div>`).join('')}`;
+    });
+}
+
+function submitProblem() {
+  const desc = document.getElementById('pmDescription').value.trim();
+  if (!desc) { alert('请输入问题描述'); return; }
+  fetch('/api/problems', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      order_type: 'injection',
+      order_id: currentProblemOrderId,
+      order_number: currentProblemOrderNum,
+      description: desc,
+      reported_by: '啤机部'
+    })
+  }).then(() => {
+    document.getElementById('pmDescription').value = '';
+    bootstrap.Modal.getInstance(document.getElementById('problemModal'))?.hide();
+    loadOrders();
+  });
+}
+
+function handleBtn(id, status) {
+  if (status === '待生产') return `<button class="btn btn-warning" onclick="event.stopPropagation();setStatus(${id},'生产中')" title="开始处理"><i class="bi bi-play-fill me-1"></i>开始处理</button>`;
+  if (status === '生产中') return `<button class="btn btn-success" onclick="event.stopPropagation();setStatus(${id},'已完成')" title="标记完成"><i class="bi bi-check-lg me-1"></i>标记完成</button>`;
+  return '';
+}
+
+function setStatus(id, status) {
+  if (status === '已完成') {
+    // 标记完成前，检查所有明细的实际用料是否已填写
+    fetch(`/api/injection/${id}`)
+      .then(r => r.json())
+      .then(order => {
+        const items = order.items || [];
+        const missing = items.filter(it => it.actual_weight_kg == null || it.actual_weight_kg === '');
+        if (missing.length > 0) {
+          alert(`⚠️ 还有 ${missing.length} 条明细未填写"实际用料(KG)"，请先在订单详情中填写完整后再标记完成。`);
+          return;
+        }
+        doSetStatus(id, status);
+      });
+  } else {
+    doSetStatus(id, status);
+  }
+}
+
+function doSetStatus(id, status) {
+  fetch(`/api/injection/${id}/status`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ status })
+  }).then(() => loadOrders());
+}
+
+function printOrder(id) {
+  window.open(`print.html?type=injection&id=${id}`, '_blank');
+}
+
+fetch('/api/material-prices').then(r => r.json()).then(prices => {
+  prices.forEach(p => { _injMatPrices[p.material] = p.unit_price; });
+});
+
+loadOrders();
+setInterval(loadOrders, 30000);
+</script>
+</body>
+</html>

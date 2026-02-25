@@ -1,0 +1,567 @@
+{
+  "injection_orders": [
+    {
+      "id": 37,
+      "order_number": "",
+      "date": "2026-02-25",
+      "order_type": "啤办",
+      "status": "待审核",
+      "reason": "",
+      "workshop": "A车间",
+      "supervisor": "易东存",
+      "eng_name": "胡帆",
+      "created_at": "2026-02-25T03:31:24.909Z",
+      "updated_at": "2026-02-25T03:31:24.909Z"
+    },
+    {
+      "id": 39,
+      "order_number": "",
+      "date": "2026-02-25",
+      "order_type": "啤办",
+      "status": "已完成",
+      "reason": "",
+      "workshop": "A车间",
+      "supervisor": "段新辉",
+      "eng_name": "胡帆",
+      "created_at": "2026-02-25T03:45:03.823Z",
+      "updated_at": "2026-02-25T06:46:57.502Z"
+    },
+    {
+      "id": 45,
+      "order_number": "",
+      "date": "2026-02-25",
+      "order_type": "啤办",
+      "status": "已完成",
+      "reason": "",
+      "workshop": "A车间",
+      "supervisor": "易东存",
+      "eng_name": "胡帆",
+      "created_at": "2026-02-25T03:45:26.001Z",
+      "updated_at": "2026-02-25T06:47:02.421Z"
+    },
+    {
+      "id": 48,
+      "order_number": "",
+      "date": "2026-02-25",
+      "order_type": "啤办",
+      "status": "已完成",
+      "reason": "",
+      "workshop": "A车间",
+      "supervisor": "",
+      "eng_name": null,
+      "created_at": "2026-02-25T06:58:38.076Z",
+      "updated_at": "2026-02-25T06:59:50.389Z"
+    }
+  ],
+  "injection_items": [
+    {
+      "id": 38,
+      "order_id": 37,
+      "sort_order": 0,
+      "seq_no": null,
+      "product_id": null,
+      "mold_id": null,
+      "mold_name": null,
+      "material": "PVC90°雾面",
+      "color": null,
+      "pigment_no": null,
+      "quantity": null,
+      "unit_weight": null,
+      "return_time": "在本厂",
+      "required_date": null,
+      "notes": "注塑"
+    },
+    {
+      "id": 40,
+      "order_id": 39,
+      "sort_order": 0,
+      "seq_no": "1",
+      "product_id": "11",
+      "mold_id": "111",
+      "mold_name": "111",
+      "material": "PVC90°雾面",
+      "color": "红色",
+      "pigment_no": "1234",
+      "quantity": "100",
+      "unit_weight": "10",
+      "return_time": "在本厂",
+      "required_date": "2026/2/26",
+      "notes": "注塑"
+    },
+    {
+      "id": 41,
+      "order_id": 39,
+      "sort_order": 1,
+      "seq_no": "1",
+      "product_id": "11",
+      "mold_id": "111",
+      "mold_name": "111",
+      "material": "PVC90°雾面",
+      "color": "红色",
+      "pigment_no": "1234",
+      "quantity": "100",
+      "unit_weight": "10",
+      "return_time": "在本厂",
+      "required_date": "2026/2/26",
+      "notes": "注塑"
+    },
+    {
+      "id": 42,
+      "order_id": 39,
+      "sort_order": 2,
+      "seq_no": "1",
+      "product_id": "11",
+      "mold_id": "111",
+      "mold_name": "111",
+      "material": "PVC90°雾面",
+      "color": "红色",
+      "pigment_no": "1234",
+      "quantity": "100",
+      "unit_weight": "10",
+      "return_time": "在本厂",
+      "required_date": "2026/2/26",
+      "notes": "注塑"
+    },
+    {
+      "id": 43,
+      "order_id": 39,
+      "sort_order": 3,
+      "seq_no": "1",
+      "product_id": "11",
+      "mold_id": "111",
+      "mold_name": "111",
+      "material": "PVC90°雾面",
+      "color": "红色",
+      "pigment_no": "1234",
+      "quantity": "100",
+      "unit_weight": "10",
+      "return_time": "在本厂",
+      "required_date": "2026/2/26",
+      "notes": "注塑"
+    },
+    {
+      "id": 44,
+      "order_id": 39,
+      "sort_order": 4,
+      "seq_no": "1",
+      "product_id": "11",
+      "mold_id": "111",
+      "mold_name": "111",
+      "material": "PVC90°雾面",
+      "color": "红色",
+      "pigment_no": "1234",
+      "quantity": "100",
+      "unit_weight": "10",
+      "return_time": "在本厂",
+      "required_date": "2026/2/26",
+      "notes": "注塑"
+    },
+    {
+      "id": 47,
+      "order_id": 45,
+      "sort_order": 0,
+      "seq_no": null,
+      "product_id": null,
+      "mold_id": null,
+      "mold_name": null,
+      "material": "PVC90°雾面",
+      "color": null,
+      "pigment_no": null,
+      "quantity": null,
+      "unit_weight": null,
+      "return_time": "在本厂",
+      "required_date": null,
+      "notes": "注塑"
+    },
+    {
+      "id": 49,
+      "order_id": 48,
+      "sort_order": 0,
+      "seq_no": "1",
+      "mold_id": "t02428",
+      "mold_name": "暴力熊头",
+      "material": "PVC透明100",
+      "color": "白",
+      "color_code": "12345",
+      "quantity": "10",
+      "color_weight_g": "10",
+      "total_weight_kg": null,
+      "mold_fee_time": null,
+      "print_time": null,
+      "notes": "注塑",
+      "regrind_no": "",
+      "regrind_weight_kg": null,
+      "receipt_no": "",
+      "collected_weight_kg": null,
+      "actual_weight_kg": 0.04,
+      "actual_amount_hkd": 0.22
+    }
+  ],
+  "slush_orders": [
+    {
+      "id": 31,
+      "order_number": "",
+      "date": "2026-02-25",
+      "order_type": "搪胶",
+      "status": "待审核",
+      "reason": "",
+      "workshop": null,
+      "created_at": "2026-02-25T02:18:51.879Z",
+      "updated_at": "2026-02-25T02:18:51.879Z"
+    },
+    {
+      "id": 33,
+      "order_number": "",
+      "date": "2026-02-25",
+      "order_type": "搪胶",
+      "status": "待审核",
+      "reason": "",
+      "workshop": null,
+      "created_at": "2026-02-25T02:18:54.384Z",
+      "updated_at": "2026-02-25T02:18:54.384Z"
+    }
+  ],
+  "slush_items": [
+    {
+      "id": 32,
+      "order_id": 31,
+      "sort_order": 0,
+      "seq_no": null,
+      "product_id": null,
+      "mold_id": null,
+      "mold_name": null,
+      "material": "PVC95度",
+      "color_code": null,
+      "pigment_no": null,
+      "unit_weight": null,
+      "quantity": null,
+      "required_date": null,
+      "return_time": null,
+      "notes": null
+    },
+    {
+      "id": 34,
+      "order_id": 33,
+      "sort_order": 0,
+      "seq_no": null,
+      "product_id": null,
+      "mold_id": null,
+      "mold_name": null,
+      "material": "PVC95度",
+      "color_code": null,
+      "pigment_no": null,
+      "unit_weight": null,
+      "quantity": null,
+      "required_date": null,
+      "return_time": null,
+      "notes": null
+    }
+  ],
+  "spray_orders": [
+    {
+      "id": 27,
+      "order_number": "",
+      "date": "2026-02-25",
+      "order_type": "喷油",
+      "status": "待审核",
+      "reason": "",
+      "workshop": "兴信车间",
+      "created_at": "2026-02-25T02:18:44.143Z",
+      "updated_at": "2026-02-25T02:18:44.143Z"
+    },
+    {
+      "id": 29,
+      "order_number": "",
+      "date": "2026-02-25",
+      "order_type": "喷油",
+      "status": "待审核",
+      "reason": "",
+      "workshop": "兴信车间",
+      "created_at": "2026-02-25T02:18:46.896Z",
+      "updated_at": "2026-02-25T02:18:46.896Z"
+    }
+  ],
+  "spray_items": [
+    {
+      "id": 28,
+      "order_id": 27,
+      "sort_order": 0,
+      "client_name": null,
+      "product_name": null,
+      "sample_qty": null,
+      "provide_time": null,
+      "receive_time": null,
+      "eng_complete_time": null,
+      "delivery_time": null,
+      "engineer": null,
+      "notes": null
+    },
+    {
+      "id": 30,
+      "order_id": 29,
+      "sort_order": 0,
+      "client_name": null,
+      "product_name": null,
+      "sample_qty": null,
+      "provide_time": null,
+      "receive_time": null,
+      "eng_complete_time": null,
+      "delivery_time": null,
+      "engineer": null,
+      "notes": null
+    }
+  ],
+  "nextId": 50,
+  "material_prices": [
+    {
+      "material": "PP EP332K",
+      "unit_price": 3.67,
+      "notes": ""
+    },
+    {
+      "material": "PP K8009",
+      "unit_price": 3.9,
+      "notes": ""
+    },
+    {
+      "material": "PP 3015",
+      "unit_price": 3.8,
+      "notes": ""
+    },
+    {
+      "material": "普通PP 1120",
+      "unit_price": 3.76,
+      "notes": ""
+    },
+    {
+      "material": "PP HJ730L",
+      "unit_price": 5.95,
+      "notes": ""
+    },
+    {
+      "material": "透明PP RJ770",
+      "unit_price": 5.88,
+      "notes": ""
+    },
+    {
+      "material": "透明PP 5090T",
+      "unit_price": 4.1,
+      "notes": ""
+    },
+    {
+      "material": "ABS750",
+      "unit_price": 4.62,
+      "notes": ""
+    },
+    {
+      "material": "ABS MG47F",
+      "unit_price": 4.6,
+      "notes": ""
+    },
+    {
+      "material": "ABS-KF740",
+      "unit_price": 5.34,
+      "notes": ""
+    },
+    {
+      "material": "ABS 5000",
+      "unit_price": 6.46,
+      "notes": ""
+    },
+    {
+      "material": "ABS-HP181",
+      "unit_price": 6.46,
+      "notes": ""
+    },
+    {
+      "material": "ABS PA-747",
+      "unit_price": 6.91,
+      "notes": ""
+    },
+    {
+      "material": "防火ABS-1000",
+      "unit_price": 14.93,
+      "notes": ""
+    },
+    {
+      "material": "透明ABS 990/920",
+      "unit_price": 9.73,
+      "notes": ""
+    },
+    {
+      "material": "透明ABS TR558/0520",
+      "unit_price": 8.05,
+      "notes": ""
+    },
+    {
+      "material": "透明ABS TR557",
+      "unit_price": 10.58,
+      "notes": ""
+    },
+    {
+      "material": "HIPS HI425",
+      "unit_price": 4.94,
+      "notes": ""
+    },
+    {
+      "material": "GPPS MW-1-301",
+      "unit_price": 9.99,
+      "notes": ""
+    },
+    {
+      "material": "HDPE HMA016",
+      "unit_price": 7.8,
+      "notes": ""
+    },
+    {
+      "material": "LDPE G812/260",
+      "unit_price": 6.74,
+      "notes": ""
+    },
+    {
+      "material": "POM F30-03",
+      "unit_price": 6.8,
+      "notes": ""
+    },
+    {
+      "material": "POM M90-44",
+      "unit_price": 9.98,
+      "notes": ""
+    },
+    {
+      "material": "超韧POM-PM820",
+      "unit_price": 15.15,
+      "notes": ""
+    },
+    {
+      "material": "超韧POM-PM830",
+      "unit_price": 15.31,
+      "notes": ""
+    },
+    {
+      "material": "POM 100P",
+      "unit_price": 13.67,
+      "notes": ""
+    },
+    {
+      "material": "POM 690",
+      "unit_price": 15.45,
+      "notes": ""
+    },
+    {
+      "material": "K料",
+      "unit_price": 11.9,
+      "notes": ""
+    },
+    {
+      "material": "EVA UE630",
+      "unit_price": 15.41,
+      "notes": ""
+    },
+    {
+      "material": "PVC本白50",
+      "unit_price": 4.7,
+      "notes": ""
+    },
+    {
+      "material": "PVC本白60",
+      "unit_price": 4.81,
+      "notes": ""
+    },
+    {
+      "material": "PVC本白65",
+      "unit_price": 5.28,
+      "notes": ""
+    },
+    {
+      "material": "PVC本白70",
+      "unit_price": 4.6,
+      "notes": ""
+    },
+    {
+      "material": "PVC本白75",
+      "unit_price": 4.61,
+      "notes": ""
+    },
+    {
+      "material": "PVC本白80",
+      "unit_price": 4.54,
+      "notes": ""
+    },
+    {
+      "material": "PVC本白85",
+      "unit_price": 4.59,
+      "notes": ""
+    },
+    {
+      "material": "PVC本白90",
+      "unit_price": 4.58,
+      "notes": ""
+    },
+    {
+      "material": "PVC本白95",
+      "unit_price": 4.7,
+      "notes": ""
+    },
+    {
+      "material": "PVC本白100",
+      "unit_price": 4.49,
+      "notes": ""
+    },
+    {
+      "material": "PVC85度雾面本白",
+      "unit_price": 5.11,
+      "notes": ""
+    },
+    {
+      "material": "PVC90度半雾本白",
+      "unit_price": 5.26,
+      "notes": ""
+    },
+    {
+      "material": "PVC70度雾面本白",
+      "unit_price": 5.33,
+      "notes": ""
+    },
+    {
+      "material": "PVC60移印特透明",
+      "unit_price": 6.94,
+      "notes": ""
+    },
+    {
+      "material": "PVC透明60",
+      "unit_price": 5.56,
+      "notes": ""
+    },
+    {
+      "material": "PVC透明70",
+      "unit_price": 5.52,
+      "notes": ""
+    },
+    {
+      "material": "PVC透明75",
+      "unit_price": 5.56,
+      "notes": ""
+    },
+    {
+      "material": "PVC透明80",
+      "unit_price": 5.39,
+      "notes": ""
+    },
+    {
+      "material": "PVC透明85",
+      "unit_price": 5.52,
+      "notes": ""
+    },
+    {
+      "material": "PVC透明95",
+      "unit_price": 5.54,
+      "notes": ""
+    },
+    {
+      "material": "PVC透明100",
+      "unit_price": 5.47,
+      "notes": ""
+    }
+  ]
+}
