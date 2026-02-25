@@ -584,6 +584,13 @@ function delBtn() {
     <div class="fill-handle" title="按住向下拖动可复制此行" onmousedown="startFillDrag(event,this)"></div>
   </div>`;
 }
+function injDelBtn() {
+  return `<div class="d-flex flex-column align-items-center gap-1">
+    <button type="button" class="btn btn-sm btn-danger" title="删除此行" onclick="this.closest('tr').remove()"><i class="bi bi-x-lg"></i></button>
+    <button type="button" class="btn btn-sm btn-outline-secondary" title="添加同模件" style="padding:1px 5px;font-size:11px" onclick="addInjSubRow(this)">+件</button>
+    <div class="fill-handle" title="按住向下拖动可复制此行" onmousedown="startFillDrag(event,this)"></div>
+  </div>`;
+}
 
 function addInjRow(it={}) {
   const tr = document.createElement('tr');
@@ -600,8 +607,36 @@ function addInjRow(it={}) {
     <td>${inp('text','mold_return_time',it.mold_return_time||it.mold_fee_time||it.print_time,'class="w-date"')}</td>
     <td>${inp('text','completion_time',it.completion_time,'class="w-date"')}</td>
     <td>${inp('text','notes',it.notes||'注塑')}</td>
-    <td>${delBtn()}</td>`;
+    <td>${injDelBtn()}</td>`;
   document.getElementById('injItemsBody').appendChild(tr);
+}
+
+// 在当前行下方插入同一工模的子件行
+function addInjSubRow(btn) {
+  const curTr = btn.closest('tr');
+  const moldId = curTr.querySelector('[name="mold_id"]').value;
+  const material = curTr.querySelector('[name="material"]').value;
+  const color = curTr.querySelector('[name="color"]').value;
+  const pigment = curTr.querySelector('[name="pigment_no"]').value;
+  const mold_return = curTr.querySelector('[name="mold_return_time"]').value;
+  const completion = curTr.querySelector('[name="completion_time"]').value;
+  const tr = document.createElement('tr');
+  tr.style.background = '#f8f9ff';
+  tr.innerHTML = `
+    <td><input type="text" class="form-control form-control-sm" name="mold_id" value="${moldId}" style="background:#eef2ff;font-size:11px;color:#666"></td>
+    <td>${inp('text','mold_name','')}</td>
+    <td>${matSel(material)}</td>
+    <td>${inp('text','color',color,'style="width:70px"')}</td>
+    <td>${inp('text','pigment_no',pigment,'style="width:70px"')}</td>
+    <td>${inp('number','quantity','','style="width:60px"')}</td>
+    <td>${inp('number','shoot_qty','','style="width:65px"')}</td>
+    <td>${inp('number','gross_weight_g','','style="width:70px"')}</td>
+    <td>${inp('number','required_material_kg','','style="width:70px"')}</td>
+    <td>${inp('text','mold_return_time',mold_return,'class="w-date"')}</td>
+    <td>${inp('text','completion_time',completion,'class="w-date"')}</td>
+    <td>${inp('text','notes','注塑')}</td>
+    <td>${injDelBtn()}</td>`;
+  curTr.parentNode.insertBefore(tr, curTr.nextSibling);
 }
 
 function addSlushRow(it={}) {

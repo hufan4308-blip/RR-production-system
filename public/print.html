@@ -86,14 +86,32 @@
       // Check if stage and operation match
       const isCk = (s, t) => stg === s && (op === t || (t === '啤办' && op === '啤板'));
 
+      // Calculate rowspan for mold_id — merge consecutive rows with identical mold_id
+      const spans = items.map((it, i) => {
+        const mid = it.mold_id || '';
+        if (!mid) return 1;
+        if (i > 0 && (items[i-1].mold_id || '') === mid) return 0; // continuation: skip cell
+        let span = 1;
+        for (let j = i + 1; j < items.length; j++) {
+          if ((items[j].mold_id || '') === mid) span++; else break;
+        }
+        return span;
+      });
+
       // Pad to 20 rows
       const allRows = [...items];
-      while (allRows.length < 20) allRows.push({});
+      const allSpans = [...spans];
+      while (allRows.length < 20) { allRows.push({}); allSpans.push(1); }
 
-      const rows = allRows.map((it, i) => `
+      const rows = allRows.map((it, i) => {
+        const span = allSpans[i];
+        const moldTd = span === 0
+          ? ''
+          : `<td rowspan="${span}" style="vertical-align:middle;text-align:center">${v(it.mold_id)}</td>`;
+        return `
         <tr style="height:22px">
           <td>${i + 1}</td>
-          <td>${v(it.mold_id)}</td>
+          ${moldTd}
           <td>${v(it.mold_name)}</td>
           <td>${v(it.material)}</td>
           <td>${v(it.color)}</td>
@@ -104,7 +122,8 @@
           <td>${v(it.required_material_kg)}</td>
           <td>${v(it.mold_return_time||it.mold_fee_time)}</td>
           <td>${v(it.completion_time)}</td>
-        </tr>`).join('');
+        </tr>`;
+      }).join('');
 
       return `
         <div class="print-header" style="margin-bottom:6px">
