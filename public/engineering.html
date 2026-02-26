@@ -1189,6 +1189,9 @@ function onExcelFileSelected() {
         return;
       }
 
+      // 注释行识别：工模编号或工模名称以这些关键字开头则跳过
+      const SKIP_RE = /^(注[：:。\s]|说明|要求|※|\*|附[：:：]|备注[：:：]|[①②③④⑤])/;
+
       // 解析数据行
       const items = dataRows.map(row => {
         const obj = {};
@@ -1199,7 +1202,17 @@ function onExcelFileSelected() {
           if (val && val !== '0') obj[idxMap[i]] = val;
         });
         return obj;
-      }).filter(obj => Object.keys(obj).length > 0 && Object.values(obj).some(v => v && v !== '-'));
+      }).filter(obj => {
+        const moldId   = (obj.mold_id   || '').trim();
+        const moldName = (obj.mold_name || '').trim();
+        // 必须有工模编号或工模名称，才算有效数据行
+        if (!moldId && !moldName) return false;
+        // 跳过注释行（工模编号/名称以注释关键词开头）
+        if (SKIP_RE.test(moldId) || SKIP_RE.test(moldName)) return false;
+        // 工模名称超过25字且没有工模编号，很可能是说明文字
+        if (!moldId && moldName.length > 25) return false;
+        return true;
+      });
 
       if (!items.length) { showToast('表头下方没有有效数据行', 'warning'); return; }
 
