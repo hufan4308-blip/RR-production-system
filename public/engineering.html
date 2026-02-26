@@ -618,10 +618,12 @@ function injDelBtn() {
   </div>`;
 }
 
-function addInjRow(it={}) {
+function addInjRow(it={}, isSubRow=false) {
   const tr = document.createElement('tr');
+  if (isSubRow) tr.style.background = '#f8f9ff';
+  const moldStyle = isSubRow ? 'style="background:#eef2ff;font-size:11px;color:#666"' : '';
   tr.innerHTML = `
-    <td>${inp('text','mold_id',it.mold_id)}</td>
+    <td><input type="text" class="form-control form-control-sm" name="mold_id" value="${it.mold_id||''}" ${moldStyle}></td>
     <td>${inp('text','mold_name',it.mold_name)}</td>
     <td>${matSel(it.material||'')}</td>
     <td>${inp('text','color',it.color,'style="width:70px"')}</td>
@@ -1219,11 +1221,23 @@ function onExcelFileSelected() {
       // 清空现有行，填入导入的行
       const bodyId = { injection:'injItemsBody', slush:'slushItemsBody', spray:'sprayItemsBody' }[_excelImportType];
       document.getElementById(bodyId).innerHTML = '';
-      items.forEach(it => {
-        if (_excelImportType === 'injection') addInjRow(it);
-        else if (_excelImportType === 'slush') addSlushRow(it);
-        else addSprayRow(it);
-      });
+      if (_excelImportType === 'injection') {
+        // 空工模编号 = 同模子件，继承上一行工模编号并用子件样式
+        let lastMoldId = '';
+        items.forEach(it => {
+          if (it.mold_id) {
+            lastMoldId = it.mold_id;
+            addInjRow(it, false);
+          } else {
+            addInjRow({ ...it, mold_id: lastMoldId }, true);
+          }
+        });
+      } else {
+        items.forEach(it => {
+          if (_excelImportType === 'slush') addSlushRow(it);
+          else addSprayRow(it);
+        });
+      }
       showToast(`已从第${headerRowIdx+1}行识别表头，成功导入 ${items.length} 行`, 'success');
     } catch(err) {
       showToast('解析失败：' + err.message, 'danger');
