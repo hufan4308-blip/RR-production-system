@@ -245,7 +245,6 @@
             <thead>
               <tr>
                 <th>客名</th><th>名称</th><th>样板数量</th>
-                <th>提供胶件时间</th><th>收到胶件时间</th><th>工程预计完成时间</th>
                 <th style="color:#dc3545">喷油交货时间</th><th>工程师/PMC</th><th>备注</th><th></th>
               </tr>
             </thead>
@@ -669,9 +668,6 @@ function addSprayRow(it={}) {
     <td>${inp('text','client_name',it.client_name)}</td>
     <td>${inp('text','product_name',it.product_name)}</td>
     <td>${inp('number','sample_qty',it.sample_qty,'style="width:65px"')}</td>
-    <td>${inp('text','provide_time',it.provide_time,'class="w-date"')}</td>
-    <td>${inp('text','receive_time',it.receive_time,'class="w-date"')}</td>
-    <td>${inp('text','eng_complete_time',it.eng_complete_time,'class="w-date"')}</td>
     <td>${inp('text','delivery_time',it.delivery_time,'class="w-date"')}</td>
     <td>${inp('text','engineer',it.engineer)}</td>
     <td>${inp('text','notes',it.notes)}</td>
@@ -693,7 +689,7 @@ function collectRows(tbodyId, fields) {
 
 const injFields   = ['mold_id','mold_name','material','color','pigment_no','quantity','shoot_qty','gross_weight_g','required_material_kg','mold_return_time','completion_time','notes'];
 const slushFields = ['seq_no','product_id','mold_id','mold_name','material','color_code','pigment_no','unit_weight','quantity','required_date','return_time','notes'];
-const sprayFields = ['client_name','product_name','sample_qty','provide_time','receive_time','eng_complete_time','delivery_time','engineer','notes'];
+const sprayFields = ['client_name','product_name','sample_qty','delivery_time','engineer','notes'];
 
 function saveOrder(type) {
   const prefix = type === 'injection' ? 'inj' : type;
