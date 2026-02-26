@@ -124,7 +124,7 @@ function renderOrders(orders) {
   }
   const rows = orders.map(o => {
     const it0 = (o.items || [])[0] || {};
-    const provideTime = it0.provide_time || '-';
+    const provideTime = it0.receive_time || '-';
     const engTime = it0.eng_complete_time || '-';
     return `
     <tr class="order-row" onclick="viewOrder(${o.id})">
@@ -160,8 +160,8 @@ function renderOrders(orders) {
       <thead class="table-dark">
         <tr>
           <th>订单编号</th><th>日期</th><th>类型</th><th>车间</th><th>主管</th><th>跟进工程师</th>
-          <th style="color:#7eb8ff">提供胶件时间</th>
-          <th style="color:#f9a8d4">工程希望完成时间</th>
+          <th style="color:#7eb8ff">收到胶件时间</th>
+          <th style="color:#f9a8d4">工程预计完成时间</th>
           <th>原因</th><th>状态</th><th>处理</th>
         </tr>
       </thead>
