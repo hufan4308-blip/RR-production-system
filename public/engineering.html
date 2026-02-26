@@ -7,6 +7,7 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
   <link href="style.css" rel="stylesheet">
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
   <style>
     .type-tabs .nav-link { color: #333; font-weight: 500; }
     .type-tabs .nav-link.active { background: #1a3a6c; color: #fff; border-color: #1a3a6c; }
@@ -125,7 +126,10 @@
         </div>
         <div class="d-flex justify-content-between align-items-center mb-2">
           <strong>明细行</strong>
-          <button class="btn btn-sm btn-outline-primary" onclick="addInjRow()"><i class="bi bi-plus-lg me-1"></i>添加行</button>
+          <div class="d-flex gap-2">
+            <button class="btn btn-sm btn-outline-success" onclick="triggerExcelImport('injection')"><i class="bi bi-file-earmark-excel me-1"></i>导入Excel</button>
+            <button class="btn btn-sm btn-outline-primary" onclick="addInjRow()"><i class="bi bi-plus-lg me-1"></i>添加行</button>
+          </div>
         </div>
         <div class="items-table-wrap">
           <table class="table table-bordered table-sm items-table" id="injItemsTable">
@@ -178,7 +182,8 @@
         </div>
         <div class="d-flex justify-content-between align-items-center mb-2">
           <strong>明细行</strong>
-          <button class="btn btn-sm btn-outline-success" onclick="addSlushRow()"><i class="bi bi-plus-lg me-1"></i>添加行</button>
+          <button class="btn btn-sm btn-outline-success" onclick="triggerExcelImport('slush')" style="color:#16a085;border-color:#16a085"><i class="bi bi-file-earmark-excel me-1"></i>导入Excel</button>
+            <button class="btn btn-sm btn-outline-success" onclick="addSlushRow()"><i class="bi bi-plus-lg me-1"></i>添加行</button>
         </div>
         <div class="items-table-wrap">
           <table class="table table-bordered table-sm items-table" id="slushItemsTable">
@@ -238,7 +243,8 @@
         </div>
         <div class="d-flex justify-content-between align-items-center mb-2">
           <strong>明细行</strong>
-          <button class="btn btn-sm btn-outline-purple" onclick="addSprayRow()" style="color:#8e44ad;border-color:#8e44ad"><i class="bi bi-plus-lg me-1"></i>添加行</button>
+          <button class="btn btn-sm btn-outline-success" onclick="triggerExcelImport('spray')" style="color:#8e44ad;border-color:#8e44ad"><i class="bi bi-file-earmark-excel me-1"></i>导入Excel</button>
+            <button class="btn btn-sm btn-outline-purple" onclick="addSprayRow()" style="color:#8e44ad;border-color:#8e44ad"><i class="bi bi-plus-lg me-1"></i>添加行</button>
         </div>
         <div class="items-table-wrap">
           <table class="table table-bordered table-sm items-table" id="sprayItemsTable">
@@ -462,6 +468,7 @@ function renderOrderList(orders) {
         <div class="btn-group btn-group-sm">
           ${o.status === '待审核' ? `<button class="btn btn-warning fw-bold" onclick="reviewOrder(${o.id},'${(o.order_number||'').replace(/'/g,'')}')"><i class="bi bi-shield-check me-1"></i>审核</button>` : ''}
           <button class="btn btn-outline-primary"   onclick="editOrder(${o.id})" title="编辑"><i class="bi bi-pencil"></i></button>
+          <button class="btn btn-outline-success"   onclick="editOrder(${o.id},true)" title="复制此单新建"><i class="bi bi-copy"></i></button>
           <button class="btn btn-outline-secondary"  onclick="printOrder(${o.id})" title="打印"><i class="bi bi-printer"></i></button>
           ${engProblemsMap[o.id] ? `<button class="btn btn-danger" onclick="viewEngProblems(${o.id},'${(o.order_number||'').replace(/'/g,'')}')" title="查看问题"><i class="bi bi-exclamation-triangle-fill"></i></button>` : ''}
           <button class="btn btn-outline-danger"    onclick="deleteOrder(${o.id})" title="删除"><i class="bi bi-trash"></i></button>
@@ -529,7 +536,7 @@ function openNewModal() {
   }
 }
 
-function editOrder(id) {
+function editOrder(id, isDuplicate = false) {
   fetch(`/api/${currentTab}/${id}`)
     .then(r => r.json())
     .then(order => {
@@ -538,12 +545,12 @@ function editOrder(id) {
       const titleId = { injection: 'injModalTitle', slush: 'slushModalTitle', spray: 'sprayModalTitle' }[currentTab];
       const bodyId  = { injection: 'injItemsBody', slush: 'slushItemsBody', spray: 'sprayItemsBody' }[currentTab];
 
-      document.getElementById(titleId).textContent = `编辑${typeNames[currentTab]} #${id}`;
-      document.getElementById(`${prefix}-id`).value = order.id;
+      document.getElementById(titleId).textContent = isDuplicate ? `复制${typeNames[currentTab]}（新建）` : `编辑${typeNames[currentTab]} #${id}`;
+      document.getElementById(`${prefix}-id`).value = isDuplicate ? '' : order.id;
       document.getElementById(`${prefix}-order_number`).value = order.order_number || '';
-      document.getElementById(`${prefix}-date`).value = order.date || '';
+      document.getElementById(`${prefix}-date`).value = new Date().toISOString().slice(0,10);
       document.getElementById(`${prefix}-order_type`).value = order.order_type || '';
-      document.getElementById(`${prefix}-status`).value = order.status || '待审核'; // 编辑时保留原状态
+      document.getElementById(`${prefix}-status`).value = isDuplicate ? '待审核' : (order.status || '待审核');
       document.getElementById(`${prefix}-reason`).value = order.reason || '';
       const wsElEdit = document.getElementById(`${prefix}-workshop`);
       if (wsElEdit) wsElEdit.value = order.workshop || '';
@@ -1063,6 +1070,111 @@ if ('Notification' in window && Notification.permission === 'granted') {
   notifyEnabled = true;
   loadDoneSnapshot();
   updateNotifBtn();
+}
+
+// ─── Excel 导入 ───────────────────────────────────────────────────────────────
+// 列名 → 字段名 映射（支持模糊匹配）
+const EXCEL_COL_MAP = {
+  injection: {
+    '工模编号':'mold_id','模具编号':'mold_id',
+    '工模名称':'mold_name','模具名称':'mold_name','产品名称':'mold_name',
+    '原料':'material','材料':'material',
+    '颜色':'color','颜色/编号':'color',
+    '色粉编号':'pigment_no','色粉':'pigment_no',
+    '件数':'quantity','套数':'quantity','件数/套数':'quantity','件数套数':'quantity',
+    '数量':'shoot_qty','数量(啤)':'shoot_qty','啤数':'shoot_qty',
+    '整啤毛重':'gross_weight_g','整啤毛重(g)':'gross_weight_g','毛重':'gross_weight_g',
+    '所需用料':'required_material_kg','所需用料(KG)':'required_material_kg','用料':'required_material_kg',
+    '模具回厂时间':'mold_return_time','回厂时间':'mold_return_time','回模时间':'mold_return_time',
+    '啤办完成时间':'completion_time','完成时间':'completion_time','要求日期':'completion_time',
+    '备注':'notes'
+  },
+  slush: {
+    '序号':'seq_no','产品编号':'product_id',
+    '工模编号':'mold_id','模具编号':'mold_id',
+    '工模名称':'mold_name','模具名称':'mold_name',
+    '原料':'material','颜色':'color_code','颜色/编号':'color_code',
+    '色粉编号':'pigment_no','每啤毛重':'unit_weight','每啤毛重(g)':'unit_weight',
+    '数量':'quantity','要求完成日期':'required_date','回模时间':'return_time','备注':'notes'
+  },
+  spray: {
+    '客名':'client_name','客户':'client_name',
+    '名称':'product_name','产品名称':'product_name',
+    '样板数量':'sample_qty','数量':'sample_qty',
+    '喷油交货时间':'delivery_time','交货时间':'delivery_time',
+    '工程师':'engineer','工程师/PMC':'engineer',
+    '备注':'notes'
+  }
+};
+
+let _excelImportType = 'injection';
+const _excelInput = (() => {
+  const el = document.createElement('input');
+  el.type = 'file';
+  el.accept = '.xlsx,.xls,.csv';
+  el.style.display = 'none';
+  document.body.appendChild(el);
+  el.addEventListener('change', onExcelFileSelected);
+  return el;
+})();
+
+function triggerExcelImport(type) {
+  _excelImportType = type;
+  _excelInput.value = '';
+  _excelInput.click();
+}
+
+function onExcelFileSelected() {
+  const file = _excelInput.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const wb = XLSX.read(e.target.result, { type: 'array', cellDates: true });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rawRows = XLSX.utils.sheet_to_json(ws, { defval: '' });
+      if (!rawRows.length) { showToast('Excel 文件没有数据', 'warning'); return; }
+
+      const colMap = EXCEL_COL_MAP[_excelImportType] || {};
+      // 建立 Excel列名 → 字段名 的映射（去空格、大小写不敏感）
+      const headerMap = {};
+      Object.keys(rawRows[0]).forEach(h => {
+        const norm = h.trim().replace(/\s+/g,'');
+        Object.keys(colMap).forEach(k => {
+          if (norm === k.replace(/\s+/g,'') || norm.includes(k.replace(/\s+/g,''))) {
+            headerMap[h] = colMap[k];
+          }
+        });
+      });
+
+      const items = rawRows.map(row => {
+        const obj = {};
+        Object.keys(row).forEach(h => {
+          if (headerMap[h]) {
+            let val = row[h];
+            if (val instanceof Date) val = val.toISOString().slice(0,10);
+            obj[headerMap[h]] = String(val).trim();
+          }
+        });
+        return obj;
+      }).filter(obj => Object.values(obj).some(v => v));
+
+      if (!items.length) { showToast('未能识别任何列，请检查表头名称', 'warning'); return; }
+
+      // 清空现有行，填入导入的行
+      const bodyId = { injection:'injItemsBody', slush:'slushItemsBody', spray:'sprayItemsBody' }[_excelImportType];
+      document.getElementById(bodyId).innerHTML = '';
+      items.forEach(it => {
+        if (_excelImportType === 'injection') addInjRow(it);
+        else if (_excelImportType === 'slush') addSlushRow(it);
+        else addSprayRow(it);
+      });
+      showToast(`已导入 ${items.length} 行数据`, 'success');
+    } catch(err) {
+      showToast('解析失败：' + err.message, 'danger');
+    }
+  };
+  reader.readAsArrayBuffer(file);
 }
 
 // ─── 拖动填充（类 Excel） ─────────────────────────────────────────────────────
