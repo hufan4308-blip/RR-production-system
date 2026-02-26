@@ -232,6 +232,8 @@
             </select>
           </div>
           <div class="col-md-3"><label class="form-label fw-bold">跟进工程师</label><input class="form-control" id="spray-engineer" placeholder="请输入姓名"></div>
+          <div class="col-md-3"><label class="form-label fw-bold">收到胶件时间</label><input type="date" class="form-control" id="spray-receive_time"></div>
+          <div class="col-md-3"><label class="form-label fw-bold">工程预计完成时间</label><input type="date" class="form-control" id="spray-eng_complete_time"></div>
           <div class="col-12"><label class="form-label fw-bold">原因/备注</label><input class="form-control" id="spray-reason" placeholder="如 新款喷油打样"></div>
         </div>
         <div class="d-flex justify-content-between align-items-center mb-2">
@@ -501,6 +503,10 @@ function openNewModal() {
   const supElNew = document.getElementById(`${prefix}-supervisor`);
   if (supElNew) supElNew.value = '';
   document.getElementById(`${prefix}-engineer`).value = '';
+  const rcvElNew = document.getElementById(`${prefix}-receive_time`);
+  if (rcvElNew) rcvElNew.value = '';
+  const engCtElNew = document.getElementById(`${prefix}-eng_complete_time`);
+  if (engCtElNew) engCtElNew.value = '';
 
   const showModal = () => {
     document.getElementById(bodyId).innerHTML = '';
@@ -541,6 +547,10 @@ function editOrder(id) {
       const supElEdit = document.getElementById(`${prefix}-supervisor`);
       if (supElEdit) supElEdit.value = order.supervisor || '';
       document.getElementById(`${prefix}-engineer`).value = order.eng_name || '';
+      const rcvEl = document.getElementById(`${prefix}-receive_time`);
+      if (rcvEl) rcvEl.value = order.receive_time || '';
+      const engCtEl = document.getElementById(`${prefix}-eng_complete_time`);
+      if (engCtEl) engCtEl.value = order.eng_complete_time || '';
 
       const fillRows = () => {
         const tbody = document.getElementById(bodyId);
@@ -701,6 +711,8 @@ function saveOrder(type) {
     workshop:     wsElSave  ? wsElSave.value  : null,
     supervisor:   supElSave ? supElSave.value : null,
     eng_name:     document.getElementById(`${prefix}-engineer`).value || null,
+    receive_time:      (type === 'spray' ? document.getElementById('spray-receive_time')?.value      : null) || null,
+    eng_complete_time: (type === 'spray' ? document.getElementById('spray-eng_complete_time')?.value : null) || null,
     items: type === 'injection' ? collectRows('injItemsBody', injFields)
          : type === 'slush'     ? collectRows('slushItemsBody', slushFields)
          :                        collectRows('sprayItemsBody', sprayFields)

@@ -123,9 +123,8 @@ function renderOrders(orders) {
     return;
   }
   const rows = orders.map(o => {
-    const it0 = (o.items || [])[0] || {};
-    const provideTime = it0.receive_time || '-';
-    const engTime = it0.eng_complete_time || '-';
+    const provideTime = o.receive_time || '-';
+    const engTime = o.eng_complete_time || '-';
     return `
     <tr class="order-row" onclick="viewOrder(${o.id})">
       <td><strong>${o.order_number || '-'}</strong></td>
