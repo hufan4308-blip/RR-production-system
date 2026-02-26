@@ -266,6 +266,24 @@
   </div>
 </div>
 
+<!-- 订单详情查看 Modal -->
+<div class="modal fade" id="orderDetailModal" tabindex="-1">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content">
+      <div class="modal-header" style="background:#1a3a6c;color:#fff">
+        <h5 class="modal-title"><i class="bi bi-file-text me-2"></i>订单详情 — <span id="detailModalLabel"></span></h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="orderDetailBody"><div class="text-center text-muted py-4">加载中...</div></div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+        <button class="btn btn-outline-primary" id="detailEditBtn"><i class="bi bi-pencil me-1"></i>编辑</button>
+        <button class="btn btn-outline-secondary" id="detailPrintBtn"><i class="bi bi-printer me-1"></i>打印</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- 问题查看/处理 Modal -->
 <div class="modal fade" id="engProblemModal" tabindex="-1">
   <div class="modal-dialog">
@@ -449,7 +467,7 @@ function renderOrderList(orders) {
   }
   const isSpray = currentTab === 'spray';
   const rows = orders.map(o => `
-    <tr>
+    <tr class="order-row" style="cursor:pointer" onclick="viewOrderDetail(${o.id},'${(o.order_number||'').replace(/'/g,'')}')">
       <td>${o.id}</td>
       <td><strong>${o.order_number || '-'}</strong></td>
       <td>${o.date || '-'}</td>
@@ -461,10 +479,10 @@ function renderOrderList(orders) {
       <td>${o.reason || '-'}</td>
       <td>
         ${statusBadge(o.status)}
-        ${engProblemsMap[o.id] ? `<span class="badge bg-danger ms-1" style="cursor:pointer" onclick="viewEngProblems(${o.id},'${(o.order_number||'').replace(/'/g,'')}')"><i class="bi bi-exclamation-triangle-fill me-1"></i>${engProblemsMap[o.id]}个问题</span>` : ''}
+        ${engProblemsMap[o.id] ? `<span class="badge bg-danger ms-1" style="cursor:pointer" onclick="event.stopPropagation();viewEngProblems(${o.id},'${(o.order_number||'').replace(/'/g,'')}')"><i class="bi bi-exclamation-triangle-fill me-1"></i>${engProblemsMap[o.id]}个问题</span>` : ''}
       </td>
       <td>${fmtDate(o.created_at)}</td>
-      <td>
+      <td onclick="event.stopPropagation()">
         <div class="btn-group btn-group-sm">
           ${o.status === '待审核' ? `<button class="btn btn-warning fw-bold" onclick="reviewOrder(${o.id},'${(o.order_number||'').replace(/'/g,'')}')"><i class="bi bi-shield-check me-1"></i>审核</button>` : ''}
           <button class="btn btn-outline-primary"   onclick="editOrder(${o.id})" title="编辑"><i class="bi bi-pencil"></i></button>
@@ -842,6 +860,25 @@ function reviewOrder(id, orderNum) {
     })
     .catch(() => {
       document.getElementById('reviewOrderDetails').innerHTML = '<div class="text-danger">加载单据失败</div>';
+    });
+}
+
+function viewOrderDetail(id, orderNum) {
+  document.getElementById('detailModalLabel').textContent = orderNum || `#${id}`;
+  document.getElementById('orderDetailBody').innerHTML = '<div class="text-center text-muted py-4">加载中...</div>';
+  document.getElementById('detailEditBtn').onclick = () => {
+    bootstrap.Modal.getInstance(document.getElementById('orderDetailModal'))?.hide();
+    editOrder(id);
+  };
+  document.getElementById('detailPrintBtn').onclick = () => printOrder(id);
+  new bootstrap.Modal(document.getElementById('orderDetailModal')).show();
+  fetch(`/api/${currentTab}/${id}`)
+    .then(r => r.json())
+    .then(order => {
+      document.getElementById('orderDetailBody').innerHTML = renderReviewDetails(order, currentTab);
+    })
+    .catch(() => {
+      document.getElementById('orderDetailBody').innerHTML = '<div class="text-danger">加载失败</div>';
     });
 }
 
