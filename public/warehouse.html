@@ -99,7 +99,15 @@
     <div class="card shadow-sm">
       <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
         <h6 class="mb-0"><i class="bi bi-table me-2"></i>工程原料汇总表</h6>
-        <div class="d-flex gap-2 flex-wrap">
+        <div class="d-flex gap-2 flex-wrap align-items-center">
+          <div class="input-group input-group-sm" style="width:220px">
+            <span class="input-group-text"><i class="bi bi-search"></i></span>
+            <input type="text" class="form-control" id="matSearch"
+              placeholder="搜索原料型号..." oninput="renderStats()" autocomplete="off">
+            <button class="btn btn-outline-secondary" onclick="document.getElementById('matSearch').value='';renderStats()" title="清除">
+              <i class="bi bi-x-lg"></i>
+            </button>
+          </div>
           <button class="btn btn-sm btn-outline-success" onclick="addMaterialRow()">
             <i class="bi bi-plus-lg me-1"></i>添加原料
           </button>
@@ -162,9 +170,10 @@
           </div>
           <div class="col-md-8">
             <label class="form-label fw-bold">原料型号 <span class="text-danger">*</span></label>
-            <select class="form-select" id="req-material">
-              <option value="">请选择原料</option>
-            </select>
+            <input type="text" class="form-control" id="req-material" list="matDatalist"
+              placeholder="输入关键词搜索，如 ABS、PP、TPE..." autocomplete="off">
+            <datalist id="matDatalist"></datalist>
+            <div id="req-material-hint" class="form-text text-muted" style="display:none"></div>
           </div>
           <div class="col-md-4">
             <label class="form-label fw-bold">申请料重 (KG) <span class="text-danger">*</span></label>
@@ -389,10 +398,18 @@ function loadStats() {
 }
 
 function renderStats() {
+  const q = (document.getElementById('matSearch')?.value || '').trim().toLowerCase();
   let totalWeight = 0, totalAmount = 0;
-  const rows = statsData.map((s, i) => {
+  // Totals always over all data
+  statsData.forEach(s => {
     totalWeight += (s.total_actual_weight || 0);
     totalAmount += (s.total_amount        || 0);
+  });
+
+  let visibleCount = 0;
+  const rows = statsData.map((s, i) => {
+    if (q && !s.material.toLowerCase().includes(q)) return '';
+    visibleCount++;
     return `
       <tr data-idx="${i}">
         <td class="text-center text-muted" style="font-size:.8rem">${i + 1}</td>
@@ -416,9 +433,11 @@ function renderStats() {
       </tr>`;
   }).join('');
 
-  document.getElementById('statsBody').innerHTML = rows + `
+  const emptyRow = (!rows.trim()) ? `<tr><td colspan="7" class="text-center text-muted p-3">没有匹配的原料</td></tr>` : '';
+  const hint = q ? `<small class="text-muted ms-2">共 ${visibleCount} 条结果（共 ${statsData.length} 条）</small>` : '';
+  document.getElementById('statsBody').innerHTML = rows + emptyRow + `
     <tr class="stat-total">
-      <td colspan="3" class="text-end">合计</td>
+      <td colspan="3" class="text-end">合计 ${hint}</td>
       <td class="text-end fw-bold">${totalWeight ? totalWeight.toFixed(2) : '-'}</td>
       <td class="text-end fw-bold" style="color:#1a6e3a">${totalAmount.toFixed(2)}</td>
       <td colspan="2"></td>
@@ -439,14 +458,19 @@ function deleteMaterial(idx) {
 }
 
 function savePrices() {
-  const prices = [];
+  // Sync any edited visible rows back into statsData first
   document.getElementById('statsBody').querySelectorAll('tr[data-idx]').forEach(tr => {
-    prices.push({
-      material:   tr.querySelector('[name="mat"]').value.trim(),
-      unit_price: parseFloat(tr.querySelector('[name="price"]').value) || 0,
-      notes:      tr.querySelector('[name="notes"]').value
-    });
+    const idx = +tr.dataset.idx;
+    statsData[idx].material  = tr.querySelector('[name="mat"]').value.trim();
+    statsData[idx].unit_price = parseFloat(tr.querySelector('[name="price"]').value) || 0;
+    statsData[idx].notes     = tr.querySelector('[name="notes"]').value;
   });
+  // Save all (including hidden filtered rows)
+  const prices = statsData.map(s => ({
+    material:   s.material,
+    unit_price: s.unit_price,
+    notes:      s.notes
+  }));
   fetch('/api/material-prices', {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
@@ -548,19 +572,34 @@ function openReqModal() {
   document.getElementById('req-weight').value = '';
   document.getElementById('req-notes').value = '';
 
-  // 加载原料下拉
-  const matSel = document.getElementById('req-material');
+  // 加载原料搜索
+  const matInput = document.getElementById('req-material');
+  matInput.value = '';
+  document.getElementById('req-material-hint').style.display = 'none';
+  const populateDatalist = prices => {
+    document.getElementById('matDatalist').innerHTML =
+      prices.map(p => `<option value="${p.material}" data-price="${p.unit_price}">`).join('');
+  };
   if (_reqMatPrices.length === 0) {
     fetch('/api/material-prices').then(r => r.json()).then(prices => {
       _reqMatPrices = prices;
-      matSel.innerHTML = '<option value="">请选择原料</option>' +
-        prices.map(p => `<option value="${p.material}">${p.material}</option>`).join('');
+      populateDatalist(prices);
     });
   } else {
-    matSel.innerHTML = '<option value="">请选择原料</option>' +
-      _reqMatPrices.map(p => `<option value="${p.material}">${p.material}</option>`).join('');
+    populateDatalist(_reqMatPrices);
   }
-  matSel.value = '';
+  // Show unit price hint when user selects a material
+  matInput.oninput = () => {
+    const val = matInput.value;
+    const match = _reqMatPrices.find(p => p.material === val);
+    const hint = document.getElementById('req-material-hint');
+    if (match) {
+      hint.textContent = `单价：${match.unit_price} HKD/磅`;
+      hint.style.display = '';
+    } else {
+      hint.style.display = 'none';
+    }
+  };
 
   // 加载关联订单下拉（仅待生产/生产中）
   const ordSel = document.getElementById('req-order');

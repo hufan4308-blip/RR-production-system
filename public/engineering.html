@@ -34,8 +34,8 @@
       <a href="injection.html" class="nav-dept-link">啤机部</a>
       <a href="slush.html"     class="nav-dept-link">搪胶部</a>
       <a href="spray.html"     class="nav-dept-link">喷油部</a>
-      <a href="warehouse.html" class="nav-dept-link"><i class="bi bi-box2-heart me-1"></i>原料仓库</a>
       <a href="supervisor.html" class="nav-dept-link" style="background:rgba(253,126,20,.25);border-color:rgba(253,126,20,.6)"><i class="bi bi-shield-check me-1"></i>主管审核</a>
+      <a href="manager.html" class="nav-dept-link" style="background:rgba(124,58,237,.25);border-color:rgba(124,58,237,.6)"><i class="bi bi-person-badge me-1"></i>经理审核</a>
     </div>
   </div>
 </nav>
@@ -54,6 +54,7 @@
       <div class="status-filter d-flex flex-wrap gap-1">
         <button class="btn btn-sm btn-outline-secondary active" onclick="filterStatus('',this)">全部</button>
         <button class="btn btn-sm" style="background:#fd7e14;color:#fff;border-color:#fd7e14" onclick="filterStatus('待审核',this)">待审核</button>
+        <button class="btn btn-sm" style="background:#7c3aed;color:#fff;border-color:#7c3aed" onclick="filterStatus('待经理审核',this)">待经理审核</button>
         <button class="btn btn-sm btn-warning"  onclick="filterStatus('待生产',this)">待生产</button>
         <button class="btn btn-sm btn-info"     onclick="filterStatus('生产中',this)">生产中</button>
         <button class="btn btn-sm btn-success"  onclick="filterStatus('已完成',this)">已完成</button>
@@ -118,7 +119,7 @@
           <div class="col-md-3"><label class="form-label fw-bold">主管</label>
             <select class="form-select" id="inj-supervisor">
               <option value="">请选择主管</option>
-              <option>易东存</option><option>段新辉</option><option>唐海林</option><option>蒙海欢</option><option>万志勇</option><option>章发东</option><option>刘际维</option>
+              <option>段新辉</option><option>唐海林</option><option>蒙海欢</option><option>万志勇</option><option>章发东</option><option>刘际维</option>
             </select>
           </div>
           <div class="col-md-3"><label class="form-label fw-bold">跟进工程师</label><input class="form-control" id="inj-engineer" placeholder="请输入姓名"></div>
@@ -135,7 +136,7 @@
           <table class="table table-bordered table-sm items-table" id="injItemsTable">
             <thead>
               <tr>
-                <th>工模编号</th><th>工模名称</th><th>原料</th><th>颜色</th><th>色粉编号</th>
+                <th>工模编号</th><th>工模名称</th><th>机型</th><th>原料</th><th>颜色</th><th>色粉编号</th>
                 <th>件数/套数</th><th>数量(啤)</th><th>整啤毛重(g)</th><th>所需用料(KG)</th>
                 <th>模具回厂时间</th><th>啤办完成时间</th><th>备注</th><th></th>
               </tr>
@@ -174,7 +175,7 @@
           <div class="col-md-3"><label class="form-label fw-bold">主管</label>
             <select class="form-select" id="slush-supervisor">
               <option value="">请选择主管</option>
-              <option>易东存</option><option>段新辉</option><option>唐海林</option><option>蒙海欢</option><option>万志勇</option><option>章发东</option><option>刘际维</option>
+              <option>段新辉</option><option>唐海林</option><option>蒙海欢</option><option>万志勇</option><option>章发东</option><option>刘际维</option>
             </select>
           </div>
           <div class="col-md-3"><label class="form-label fw-bold">跟进工程师</label><input class="form-control" id="slush-engineer" placeholder="请输入姓名"></div>
@@ -233,7 +234,7 @@
           <div class="col-md-3"><label class="form-label fw-bold">主管</label>
             <select class="form-select" id="spray-supervisor">
               <option value="">请选择主管</option>
-              <option>易东存</option><option>段新辉</option><option>唐海林</option><option>蒙海欢</option><option>万志勇</option><option>章发东</option><option>刘际维</option>
+              <option>段新辉</option><option>唐海林</option><option>蒙海欢</option><option>万志勇</option><option>章发东</option><option>刘际维</option>
             </select>
           </div>
           <div class="col-md-3"><label class="form-label fw-bold">跟进工程师</label><input class="form-control" id="spray-engineer" placeholder="请输入姓名"></div>
@@ -437,7 +438,7 @@ function loadOrders() {
     if (currentFilter)   orders = orders.filter(o => o.status === currentFilter);
     if (currentWorkshop) orders = orders.filter(o => o.workshop === currentWorkshop);
     // 按主管分组，每组内待审核排最前，其次按 ID 降序
-    const _sOrd = { '待审核':0, '待生产':1, '生产中':2, '已完成':3, '已驳回':4, '已取消':5 };
+    const _sOrd = { '待审核':0, '待经理审核':1, '待生产':2, '生产中':3, '已完成':4, '已驳回':5, '已取消':6 };
     orders.sort((a, b) => {
       const sa = (a.supervisor || ''), sb = (b.supervisor || '');
       if (sa !== sb) return sa.localeCompare(sb, 'zh');
@@ -451,6 +452,7 @@ function loadOrders() {
 
 const statusBadge = s => ({
   '待审核': '<span class="badge" style="background:#fd7e14">待审核</span>',
+  '待经理审核': '<span class="badge" style="background:#7c3aed">待经理审核</span>',
   '待生产': '<span class="badge badge-pending">待生产</span>',
   '生产中': '<span class="badge badge-progress">生产中</span>',
   '已完成': '<span class="badge badge-done">已完成</span>',
@@ -484,12 +486,12 @@ function renderOrderList(orders) {
       <td>${fmtDate(o.created_at)}</td>
       <td onclick="event.stopPropagation()">
         <div class="btn-group btn-group-sm">
-          ${o.status === '待审核' ? `<button class="btn btn-warning fw-bold" onclick="reviewOrder(${o.id},'${(o.order_number||'').replace(/'/g,'')}')"><i class="bi bi-shield-check me-1"></i>审核</button>` : ''}
-          <button class="btn btn-outline-primary"   onclick="editOrder(${o.id})" title="编辑"><i class="bi bi-pencil"></i></button>
-          <button class="btn btn-outline-success"   onclick="editOrder(${o.id},true)" title="复制此单新建"><i class="bi bi-copy"></i></button>
+          ${(currentTab === 'injection' && (o.status === '待审核' || o.status === '待经理审核')) ? `<button class="btn ${o.status === '待经理审核' ? 'btn-primary' : 'btn-warning'} fw-bold" onclick="reviewOrder(${o.id},'${(o.order_number||'').replace(/'/g,'')}')"><i class="bi bi-shield-check me-1"></i>审核</button>` : ''}
+            <button class="btn btn-outline-primary"  onclick="editOrder(${o.id})" title="编辑"><i class="bi bi-pencil"></i></button>
+            <button class="btn btn-outline-danger"   onclick="deleteOrder(${o.id})" title="删除"><i class="bi bi-trash"></i></button>
+          <button class="btn btn-outline-success"    onclick="editOrder(${o.id},true)" title="复制此单新建"><i class="bi bi-copy"></i></button>
           <button class="btn btn-outline-secondary"  onclick="printOrder(${o.id})" title="打印"><i class="bi bi-printer"></i></button>
           ${engProblemsMap[o.id] ? `<button class="btn btn-danger" onclick="viewEngProblems(${o.id},'${(o.order_number||'').replace(/'/g,'')}')" title="查看问题"><i class="bi bi-exclamation-triangle-fill"></i></button>` : ''}
-          <button class="btn btn-outline-danger"    onclick="deleteOrder(${o.id})" title="删除"><i class="bi bi-trash"></i></button>
         </div>
       </td>
     </tr>`).join('');
@@ -530,7 +532,7 @@ function openNewModal() {
   document.getElementById(`${prefix}-order_type`).value = prefix === 'inj' ? '试模' : prefix === 'slush' ? '搪胶' : '喷油';
   const stgElNew = document.getElementById(`${prefix}-stage`);
   if (stgElNew) stgElNew.value = '';
-  document.getElementById(`${prefix}-status`).value = '待审核';
+  document.getElementById(`${prefix}-status`).value = (currentTab === 'injection') ? '待审核' : '待生产';
   document.getElementById(`${prefix}-reason`).value = '';
   const wsElNew = document.getElementById(`${prefix}-workshop`);
   if (wsElNew) wsElNew.value = prefix === 'inj' ? 'A车间' : '兴信车间';
@@ -616,11 +618,18 @@ function sel(name, opts, val='') {
   return `<select class="form-select form-select-sm" name="${name}">${opts.map(o => `<option${o===val?' selected':''}>${o}</option>`).join('')}</select>`;
 }
 function matSel(val) {
-  const opts = _matPrices.map(p => {
-    const e = p.material.replace(/&/g,'&amp;').replace(/"/g,'&quot;');
-    return `<option value="${e}"${p.material === val ? ' selected' : ''}>${e}</option>`;
-  }).join('');
-  return `<select class="form-select form-select-sm" name="material" style="min-width:130px"><option value="">选择原料</option>${opts}</select>`;
+  // Keep datalist in sync with _matPrices
+  const dl = document.getElementById('injMatDatalist');
+  if (dl && _matPrices.length > 0 && dl.children.length === 0) {
+    dl.innerHTML = _matPrices.map(p => {
+      const e = p.material.replace(/&/g,'&amp;').replace(/"/g,'&quot;');
+      return `<option value="${e}">`;
+    }).join('');
+  }
+  const v = (val||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;');
+  return `<input type="text" class="form-control form-control-sm" name="material"
+    value="${v}" list="injMatDatalist" placeholder="搜索原料..." autocomplete="off"
+    style="min-width:130px">`;
 }
 function delBtn() {
   return `<div class="d-flex flex-column align-items-center gap-1">
@@ -643,6 +652,7 @@ function addInjRow(it={}, isSubRow=false) {
   tr.innerHTML = `
     <td><input type="text" class="form-control form-control-sm" name="mold_id" value="${it.mold_id||''}" ${moldStyle}></td>
     <td>${inp('text','mold_name',it.mold_name)}</td>
+    <td>${inp('text','machine_type',it.machine_type,'style="width:70px"' )}</td>
     <td>${matSel(it.material||'')}</td>
     <td>${inp('text','color',it.color,'style="width:70px"')}</td>
     <td>${inp('text','pigment_no',it.pigment_no||it.color_code,'style="width:70px"')}</td>
@@ -666,6 +676,7 @@ function addInjSubRow(btn) {
   tr.innerHTML = `
     <td><input type="text" class="form-control form-control-sm" name="mold_id" value="${g('mold_id')}" style="background:#eef2ff;font-size:11px;color:#666"></td>
     <td>${inp('text','mold_name','')}</td>
+    <td>${inp('text','machine_type',g('machine_type'),'style="width:70px"')}</td>
     <td>${matSel(g('material'))}</td>
     <td>${inp('text','color',g('color'),'style="width:70px"')}</td>
     <td>${inp('text','pigment_no',g('pigment_no'),'style="width:70px"')}</td>
@@ -724,7 +735,7 @@ function collectRows(tbodyId, fields) {
   });
 }
 
-const injFields   = ['mold_id','mold_name','material','color','pigment_no','quantity','shoot_qty','gross_weight_g','required_material_kg','mold_return_time','completion_time','notes'];
+const injFields   = ['mold_id','mold_name','machine_type','material','color','pigment_no','quantity','shoot_qty','gross_weight_g','required_material_kg','mold_return_time','completion_time','notes'];
 const slushFields = ['seq_no','product_id','mold_id','mold_name','material','color_code','pigment_no','unit_weight','quantity','required_date','return_time','notes'];
 const sprayFields = ['client_name','product_name','sample_qty','delivery_time','engineer','notes'];
 
@@ -753,8 +764,9 @@ function saveOrder(type) {
 
   const url    = id ? `/api/${type}/${id}` : `/api/${type}`;
   const method = id ? 'PUT' : 'POST';
+  const hdrs   = { 'Content-Type': 'application/json' };
 
-  fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+  fetch(url, { method, headers: hdrs, body: JSON.stringify(body) })
     .then(r => r.json())
     .then(data => {
       if (data.error) { showToast(data.error, 'danger'); return; }
@@ -815,7 +827,11 @@ function resolveProblem(problemId) {
 function deleteOrder(id) {
   if (!confirm(`确定删除这条单据吗？删除后无法恢复。`)) return;
   fetch(`/api/${currentTab}/${id}`, { method: 'DELETE' })
-    .then(() => { showToast('删除成功', 'success'); loadOrders(); })
+    .then(r => r.json())
+    .then(d => {
+      if (d.error) { showToast(d.error, 'danger'); return; }
+      showToast('删除成功', 'success'); loadOrders();
+    })
     .catch(() => showToast('删除失败', 'danger'));
 }
 
@@ -834,9 +850,10 @@ function showToast(msg, type = 'success') {
 
 // ─── 主管审核 ─────────────────────────────────────────────────────────────────
 const SUPERVISOR_PINS = {
-  '易东存': '6601', '段新辉': '6602', '唐海林': '6603',
+  '段新辉': '6602', '唐海林': '6603',
   '蒙海欢': '6604', '万志勇': '6605', '章发东': '6606', '刘际维': '6607'
 };
+const MANAGER_PIN = { '易东存': '6601' };
 
 let reviewingOrderId = null;
 let reviewingOrderSupervisor = null;
@@ -900,8 +917,8 @@ function renderReviewDetails(order, type) {
 
   let thead = '', rows = '';
   if (type === 'injection') {
-    thead = '<tr><th>序号</th><th>产品编号</th><th>工模编号</th><th>工模名称</th><th>原料</th><th>颜色</th><th>色粉编号</th><th>数量</th><th>整啤重量(g)</th><th>回模时间</th><th>要求日期</th><th>备注</th></tr>';
-    rows = items.map(it => `<tr><td>${it.seq_no||'-'}</td><td>${it.product_id||'-'}</td><td>${it.mold_id||'-'}</td><td>${it.mold_name||'-'}</td><td>${it.material||'-'}</td><td>${it.color||'-'}</td><td>${it.pigment_no||'-'}</td><td>${it.quantity||'-'}</td><td>${it.unit_weight||'-'}</td><td>${it.return_time||'-'}</td><td>${it.required_date||'-'}</td><td>${it.notes||'-'}</td></tr>`).join('');
+    thead = '<tr><th>工模编号</th><th>工模名称</th><th>机型</th><th>原料</th><th>颜色</th><th>色粉编号</th><th>件数/套数</th><th>数量(啤)</th><th>整啤毛重(g)</th><th>所需用料(KG)</th><th>模具回厂时间</th><th>完成时间</th><th>备注</th></tr>';
+    rows = items.map(it => `<tr><td>${it.mold_id||'-'}</td><td>${it.mold_name||'-'}</td><td>${it.machine_type||'-'}</td><td>${it.material||'-'}</td><td>${it.color||'-'}</td><td>${it.pigment_no||'-'}</td><td>${it.quantity||'-'}</td><td>${it.shoot_qty||'-'}</td><td>${it.gross_weight_g||'-'}</td><td>${it.required_material_kg||'-'}</td><td>${it.mold_return_time||'-'}</td><td>${it.completion_time||'-'}</td><td>${it.notes||'-'}</td></tr>`).join('');
   } else if (type === 'slush') {
     thead = '<tr><th>序号</th><th>产品编号</th><th>工模编号</th><th>工模名称</th><th>原料</th><th>颜色/编号</th><th>色粉编号</th><th>每啤毛重(g)</th><th>数量</th><th>要求完成日期</th><th>回模时间</th><th>备注</th></tr>';
     rows = items.map(it => `<tr><td>${it.seq_no||'-'}</td><td>${it.product_id||'-'}</td><td>${it.mold_id||'-'}</td><td>${it.mold_name||'-'}</td><td>${it.material||'-'}</td><td>${it.color_code||'-'}</td><td>${it.pigment_no||'-'}</td><td>${it.unit_weight||'-'}</td><td>${it.quantity||'-'}</td><td>${it.required_date||'-'}</td><td>${it.return_time||'-'}</td><td>${it.notes||'-'}</td></tr>`).join('');
@@ -917,18 +934,34 @@ function submitReview(action) {
   const enteredPin = document.getElementById('reviewPin').value.trim();
   const rejectReason = document.getElementById('rejectReason').value.trim();
 
-  // 验证：输入的PIN必须与该单据跟进主管的审核码一致
-  const correctPin = reviewingOrderSupervisor ? SUPERVISOR_PINS[reviewingOrderSupervisor] : null;
-  if (!enteredPin || !correctPin || enteredPin !== correctPin) {
+  // 检查是否为经理PIN
+  const isManager = Object.values(MANAGER_PIN).includes(enteredPin);
+  // 检查是否为该单据主管PIN
+  const correctSupPin = reviewingOrderSupervisor ? SUPERVISOR_PINS[reviewingOrderSupervisor] : null;
+  const isSupervisor = correctSupPin && enteredPin === correctSupPin;
+
+  if (!enteredPin || (!isManager && !isSupervisor)) {
     document.getElementById('reviewPinError').classList.remove('d-none');
     document.getElementById('reviewPin').focus();
     return;
   }
   document.getElementById('reviewPinError').classList.add('d-none');
 
-  const newStatus = action === 'approve' ? '待生产' : '已驳回';
+  let newStatus;
+  let toastMsg;
+  if (action === 'reject') {
+    newStatus = '已驳回';
+    toastMsg = '已驳回';
+  } else if (isManager) {
+    // 经理审核：直接进入待生产
+    newStatus = '待生产';
+    toastMsg = '经理审核通过！单据已进入待生产';
+  } else {
+    // 主管审核：进入待经理审核
+    newStatus = '待经理审核';
+    toastMsg = '主管审核通过！已转交经理审核';
+  }
 
-  // 审核通过只改状态；驳回同时保存驳回原因到 reason 字段
   const doUpdate = action === 'reject'
     ? fetch(`/api/${currentTab}/${reviewingOrderId}`)
         .then(r => r.json())
@@ -949,7 +982,7 @@ function submitReview(action) {
   doUpdate
     .then(() => {
       bootstrap.Modal.getInstance(document.getElementById('reviewModal'))?.hide();
-      showToast(action === 'approve' ? '审核通过！单据已进入待生产' : '已驳回', action === 'approve' ? 'success' : 'danger');
+      showToast(toastMsg, action === 'approve' ? 'success' : 'danger');
       loadOrders();
     })
     .catch(() => showToast('操作失败', 'danger'));
@@ -1134,10 +1167,10 @@ const EXCEL_COL_MAP = {
     '颜色':'color',
     '色粉编号':'pigment_no','色粉':'pigment_no',
     '件数':'quantity','套数':'quantity','件数/套数':'quantity','件数套数':'quantity',
-    '数量(啤)':'shoot_qty','数量（啤）':'shoot_qty','啤数':'shoot_qty',
+    '数量(啤)':'shoot_qty','数量（啤）':'shoot_qty','啤数':'shoot_qty','数量':'shoot_qty',
     '整啤毛重(g)':'gross_weight_g','整啤毛重（g）':'gross_weight_g',
     '单个重量(g)':'gross_weight_g','单个重量（g）':'gross_weight_g','单个毛重(g)':'gross_weight_g',
-    '毛重':'gross_weight_g',
+    '每啤毛重':'gross_weight_g','毛重':'gross_weight_g',
     '所需用料(kg)':'required_material_kg','所需用料（kg）':'required_material_kg',
     '所需用料(KG)':'required_material_kg','所需用料':'required_material_kg','用料':'required_material_kg',
     '模具回厂时间':'mold_return_time','回厂时间':'mold_return_time','回模时间':'mold_return_time',
@@ -1229,7 +1262,10 @@ function onExcelFileSelected() {
       }
 
       // 注释行识别：工模编号或工模名称以这些关键字开头则跳过
-      const SKIP_RE = /^(注[：:。\s]|说明|要求|※|\*|附[：:：]|备注[：:：]|[①②③④⑤])/;
+      const SKIP_RE = /^(注[：:。\s]|说明|要求|※|\*|附[：:：]|备注[：:：]|[①②③④⑤]|\d+[.、．]\D)/;
+
+      // 需要去掉中文单位的数值字段
+      const NUMERIC_FIELDS = ['shoot_qty','quantity','gross_weight_g','required_material_kg','unit_weight','sample_qty'];
 
       // 解析数据行
       const items = dataRows.map(row => {
@@ -1238,7 +1274,15 @@ function onExcelFileSelected() {
           let val = row[i];
           if (val === null || val === undefined) return;
           val = String(val).trim();
-          if (val && val !== '0') obj[idxMap[i]] = val;
+          if (val && val !== '0') {
+            const field = idxMap[i];
+            // 数值字段去掉中文单位后缀（如 "20啤" → "20"，"5.6kg" → "5.6"）
+            if (NUMERIC_FIELDS.includes(field)) {
+              const num = val.replace(/[^\d.\-]/g, '');
+              if (num) val = num;
+            }
+            obj[field] = val;
+          }
         });
         return obj;
       }).filter(obj => {
@@ -1321,12 +1365,21 @@ document.addEventListener('mouseup', e => {
   _fillState = null;
 });
 
+
 // ─── 初始化 ───────────────────────────────────────────────────────────────────
 let _matPrices = [];
-fetch('/api/material-prices').then(r => r.json()).then(p => { _matPrices = p; });
+fetch('/api/material-prices').then(r => r.json()).then(p => {
+  _matPrices = p;
+  const dl = document.getElementById('injMatDatalist');
+  if (dl) dl.innerHTML = p.map(m => {
+    const e = m.material.replace(/&/g,'&amp;').replace(/"/g,'&quot;');
+    return `<option value="${e}">`;
+  }).join('');
+});
 
 loadOrders();
 setInterval(() => { loadOrders(); checkForNewCompletions(); }, 30000);
 </script>
+<datalist id="injMatDatalist"></datalist>
 </body>
 </html>
