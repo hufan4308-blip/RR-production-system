@@ -1187,10 +1187,11 @@ const EXCEL_COL_MAP = {
     '序号':'seq_no','产品编号':'product_id',
     '工模编号':'mold_id','模具编号':'mold_id',
     '工模名称':'mold_name','模具名称':'mold_name',
-    '原料':'material','颜色':'color_code','颜色/编号':'color_code',
+    '原料':'material','颜色':'color_code','颜色/编号':'color_code','颜色/编通号':'color_code',
     '色粉编号':'pigment_no',
     '每啤毛重(g)':'unit_weight','每啤毛重':'unit_weight',
-    '数量':'quantity','要求完成日期':'required_date','回模时间':'return_time','备注':'notes'
+    '数量':'quantity','要求完成日期':'required_date','回模时间':'return_time','备注':'notes',
+    '产品图片':'product_image'
   },
   spray: {
     '客名':'client_name','客户':'client_name',
@@ -1294,8 +1295,10 @@ function onExcelFileSelected() {
       }).filter(obj => {
         const moldId   = (obj.mold_id   || '').trim();
         const moldName = (obj.mold_name || '').trim();
-        // 必须有工模编号或工模名称，才算有效数据行
-        if (!moldId && !moldName) return false;
+        const productId = (obj.product_id || '').trim();
+        // 搪胶/喷油单可以用产品编号作为有效行标识
+        const hasKey = moldId || moldName || productId || (_excelImportType === 'spray' && obj.client_name);
+        if (!hasKey) return false;
         // 跳过注释行（工模编号/名称以注释关键词开头）
         if (SKIP_RE.test(moldId) || SKIP_RE.test(moldName)) return false;
         // 工模名称超过25字且没有工模编号，很可能是说明文字
