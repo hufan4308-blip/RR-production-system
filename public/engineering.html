@@ -99,6 +99,7 @@
         <input type="hidden" id="inj-status" value="待审核">
         <div class="row g-3 mb-3">
           <div class="col-md-3"><label class="form-label fw-bold">产品编号</label><input class="form-control" id="inj-order_number" placeholder="如 HD2024001"></div>
+          <div class="col-md-3"><label class="form-label fw-bold">订单编号</label><input class="form-control" id="inj-doc_number" placeholder="订单编号"></div>
           <div class="col-md-3"><label class="form-label fw-bold">日期</label><input type="date" class="form-control" id="inj-date"></div>
           <div class="col-md-3"><label class="form-label fw-bold">阶段</label>
             <select class="form-select" id="inj-stage">
@@ -528,6 +529,8 @@ function openNewModal() {
   document.getElementById(titleId).textContent = `新建${typeNames[currentTab]}`;
   document.getElementById(`${prefix}-id`).value = '';
   document.getElementById(`${prefix}-order_number`).value = '';
+  const docNumElNew = document.getElementById(`${prefix}-doc_number`);
+  if (docNumElNew) docNumElNew.value = '';
   document.getElementById(`${prefix}-date`).value = new Date().toISOString().slice(0,10);
   document.getElementById(`${prefix}-order_type`).value = prefix === 'inj' ? '试模' : prefix === 'slush' ? '搪胶' : '喷油';
   const stgElNew = document.getElementById(`${prefix}-stage`);
@@ -572,6 +575,8 @@ function editOrder(id, isDuplicate = false) {
       document.getElementById(titleId).textContent = isDuplicate ? `复制${typeNames[currentTab]}（新建）` : `编辑${typeNames[currentTab]} #${id}`;
       document.getElementById(`${prefix}-id`).value = isDuplicate ? '' : order.id;
       document.getElementById(`${prefix}-order_number`).value = order.order_number || '';
+      const docNumElEdit = document.getElementById(`${prefix}-doc_number`);
+      if (docNumElEdit) docNumElEdit.value = isDuplicate ? '' : (order.doc_number || '');
       document.getElementById(`${prefix}-date`).value = new Date().toISOString().slice(0,10);
       document.getElementById(`${prefix}-order_type`).value = order.order_type || '';
       document.getElementById(`${prefix}-status`).value = isDuplicate ? '待审核' : (order.status || '待审核');
@@ -747,6 +752,7 @@ function saveOrder(type) {
   const stgElSave = document.getElementById(`${prefix}-stage`);
   const body = {
     order_number: document.getElementById(`${prefix}-order_number`).value,
+    doc_number:   document.getElementById(`${prefix}-doc_number`)?.value || null,
     date:         document.getElementById(`${prefix}-date`).value,
     order_type:   document.getElementById(`${prefix}-order_type`).value,
     stage:        stgElSave ? (stgElSave.value || null) : null,

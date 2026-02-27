@@ -261,6 +261,8 @@ app.put('/api/material-prices', (req, res) => {
 // ─── 原料用量汇总统计 ──────────────────────────────────────────────────────────
 app.get('/api/material-stats', (req, res) => {
   const data = loadData();
+  const month = req.query.month; // optional YYYY-MM filter
+
   // 以价格表为基础建立统计结构
   const stats = {};
   (data.material_prices || []).forEach((p, i) => {
@@ -269,9 +271,21 @@ app.get('/api/material-stats', (req, res) => {
       notes: p.notes || '', total_actual_weight: 0, total_amount: 0
     };
   });
+
+  // 如有月份过滤，先找出该月订单 ID 集合
+  let validOrderIds = null;
+  if (month) {
+    validOrderIds = new Set(
+      (data.injection_orders || [])
+        .filter(o => (o.date || '').startsWith(month))
+        .map(o => o.id)
+    );
+  }
+
   // 累加 injection_items 里的仓库实填数据
   (data.injection_items || []).forEach(item => {
     if (!item.material) return;
+    if (validOrderIds && !validOrderIds.has(item.order_id)) return;
     if (!stats[item.material]) {
       stats[item.material] = {
         seq: Object.keys(stats).length + 1, material: item.material,
@@ -282,6 +296,32 @@ app.get('/api/material-stats', (req, res) => {
     stats[item.material].total_amount        += +(item.actual_amount_hkd || 0);
   });
   res.json(Object.values(stats));
+});
+
+// ─── 啤办费用汇总 ─────────────────────────────────────────────────────────────
+app.get('/api/injection-costs', (req, res) => {
+  const data = loadData();
+  const month = req.query.month; // optional YYYY-MM filter
+  let orders = data.injection_orders || [];
+  if (month) orders = orders.filter(o => (o.date || '').startsWith(month));
+  const items = data.injection_items || [];
+  const result = [];
+  orders.forEach(o => {
+    const orderItems = items.filter(i => i.order_id === o.id).sort((a,b) => a.sort_order - b.sort_order);
+    orderItems.forEach(it => {
+      result.push({
+        order_number: o.order_number || '',
+        doc_number: o.doc_number || '',
+        date: o.date || '',
+        workshop: o.workshop || '',
+        mold_id: it.mold_id || '',
+        mold_name: it.mold_name || '',
+        injection_cost: it.injection_cost || null,
+        notes: it.notes || ''
+      });
+    });
+  });
+  res.json(result);
 });
 
 // ─── 领料单 ───────────────────────────────────────────────────────────────────

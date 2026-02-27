@@ -36,6 +36,11 @@
         <i class="bi bi-bar-chart-line me-1"></i>原料汇总表
       </button>
     </li>
+    <li class="nav-item">
+      <button class="nav-link" onclick="switchInjTab('cost',this)">
+        <i class="bi bi-cash-coin me-1"></i>啤办费用表
+      </button>
+    </li>
   </ul>
 
   <!-- ── 任务单 Tab ── -->
@@ -63,6 +68,13 @@
       <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
         <h6 class="mb-0"><i class="bi bi-table me-2"></i>工程原料汇总表</h6>
         <div class="d-flex gap-2 flex-wrap align-items-center">
+          <div class="input-group input-group-sm" style="width:150px">
+            <span class="input-group-text"><i class="bi bi-calendar3"></i></span>
+            <input type="month" class="form-control" id="matMonth" onchange="loadStats()">
+          </div>
+          <button class="btn btn-sm btn-outline-warning" onclick="document.getElementById('matMonth').value='';loadStats()" title="显示全部月份">
+            全部
+          </button>
           <div class="input-group input-group-sm" style="width:220px">
             <span class="input-group-text"><i class="bi bi-search"></i></span>
             <input type="text" class="form-control" id="matSearch"
@@ -74,6 +86,9 @@
           </div>
           <button class="btn btn-sm btn-outline-secondary" onclick="loadStats()">
             <i class="bi bi-arrow-clockwise me-1"></i>刷新数据
+          </button>
+          <button class="btn btn-sm btn-outline-primary" onclick="printTable('stats')">
+            <i class="bi bi-printer me-1"></i>打印
           </button>
         </div>
       </div>
@@ -92,6 +107,52 @@
             </thead>
             <tbody id="statsBody">
               <tr><td colspan="6" class="text-center text-muted p-3">加载中...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 啤办费用表 Tab ── -->
+  <div id="injTabCost" style="display:none">
+    <div class="card shadow-sm">
+      <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <h6 class="mb-0"><i class="bi bi-cash-coin me-2"></i>啤办费用表</h6>
+        <div class="d-flex gap-2 flex-wrap align-items-center">
+          <div class="input-group input-group-sm" style="width:150px">
+            <span class="input-group-text"><i class="bi bi-calendar3"></i></span>
+            <input type="month" class="form-control" id="costMonth" onchange="loadCostData()">
+          </div>
+          <button class="btn btn-sm btn-outline-warning" onclick="document.getElementById('costMonth').value='';loadCostData()" title="显示全部月份">
+            全部
+          </button>
+          <button class="btn btn-sm btn-outline-secondary" onclick="loadCostData()">
+            <i class="bi bi-arrow-clockwise me-1"></i>刷新数据
+          </button>
+          <button class="btn btn-sm btn-outline-primary" onclick="printTable('cost')">
+            <i class="bi bi-printer me-1"></i>打印
+          </button>
+        </div>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-bordered table-sm mb-0" id="costTable">
+            <thead class="table-dark text-center" style="font-size:.82rem">
+              <tr>
+                <th style="width:46px">序号</th>
+                <th>订单编号</th>
+                <th>产品编号</th>
+                <th>日期</th>
+                <th>车间</th>
+                <th>工模编号</th>
+                <th>工模名称</th>
+                <th style="width:120px">啤办费用<br><small>(HKD)</small></th>
+                <th style="width:110px">备注</th>
+              </tr>
+            </thead>
+            <tbody id="costBody">
+              <tr><td colspan="9" class="text-center text-muted p-3">加载中...</td></tr>
             </tbody>
           </table>
         </div>
@@ -259,6 +320,8 @@ function viewOrder(id) {
           <td><input type="number" class="form-control form-control-sm bg-light" name="actual_amount_hkd"
               value="${it.actual_amount_hkd||''}" step="0.01" style="width:85px" placeholder="自动计算"
               title="= 实际用料 × 单价，也可手动修改"></td>
+          <td><input type="number" class="form-control form-control-sm" name="injection_cost"
+              value="${it.injection_cost||''}" step="0.01" style="width:85px" placeholder="0.00"></td>
         </tr>`;
       }).join('');
 
@@ -281,13 +344,13 @@ function viewOrder(id) {
             <thead>
               <tr class="text-center">
                 <th colspan="13" style="background:#fff3cd">工程填写（只读）</th>
-                <th colspan="4" style="background:#cfe2ff">啤机部填写</th>
+                <th colspan="5" style="background:#cfe2ff">啤机部填写</th>
               </tr>
               <tr class="table-dark text-center" style="font-size:.78rem">
                 <th>工模编号</th><th>工模名称</th><th>机型</th><th>原料/单价</th><th>颜色</th><th>色粉编号</th><th>件数/套数</th>
                 <th>数量(啤)</th><th>整啤毛重(g)</th><th>所需用料(KG)</th><th>模具回厂时间</th><th>啤办完成时间</th><th>备注</th>
                 <th>领原料单号</th><th>领料重量(KG)</th>
-                <th>实际用料(KG)</th><th>用料金额(HKD)</th>
+                <th>实际用料(KG)</th><th>用料金额(HKD)</th><th>啤办费用(HKD)</th>
               </tr>
             </thead>
             <tbody id="machineItemsBody">${rows}</tbody>
@@ -315,6 +378,7 @@ function saveMachineData(orderId) {
     collected_weight_kg:  parseFloat(tr.querySelector('[name="collected_weight_kg"]').value)  || null,
     actual_weight_kg:     parseFloat(tr.querySelector('[name="actual_weight_kg"]').value)     || null,
     actual_amount_hkd:    parseFloat(tr.querySelector('[name="actual_amount_hkd"]').value)    || null,
+    injection_cost:       parseFloat(tr.querySelector('[name="injection_cost"]').value)       || null,
   }));
   fetch(`/api/injection/${orderId}/items`, {
     method: 'PATCH',
@@ -431,15 +495,19 @@ function switchInjTab(name, el) {
   el.classList.add('active');
   document.getElementById('injTabOrders').style.display = name === 'orders' ? '' : 'none';
   document.getElementById('injTabStats').style.display  = name === 'stats'  ? '' : 'none';
+  document.getElementById('injTabCost').style.display   = name === 'cost'   ? '' : 'none';
   if (name === 'stats') loadStats();
+  if (name === 'cost')  loadCostData();
 }
 
 // ── 原料汇总表（只读）──────────────────────────────────────────────────────
 let statsData = [];
 
 function loadStats() {
+  const month = document.getElementById('matMonth')?.value || '';
+  const statsUrl = month ? `/api/material-stats?month=${month}` : '/api/material-stats';
   Promise.all([
-    fetch('/api/material-stats').then(r => r.json()),
+    fetch(statsUrl).then(r => r.json()),
     fetch('/api/material-prices').then(r => r.json())
   ]).then(([stats, prices]) => {
     const usageMap = {};
@@ -453,6 +521,45 @@ function loadStats() {
       total_amount:        (usageMap[p.material] || {}).total_amount        || 0
     }));
     renderStats();
+  });
+}
+
+// ── 啤办费用表 ──────────────────────────────────────────────────────────────
+function loadCostData() {
+  const month = document.getElementById('costMonth')?.value || '';
+  const url = month ? `/api/injection-costs?month=${month}` : '/api/injection-costs';
+  fetch(url).then(r => r.json()).then(items => {
+    let totalCost = 0;
+    const rows = items.map((it, i) => {
+      const cost = parseFloat(it.injection_cost) || 0;
+      totalCost += cost;
+      return `
+        <tr>
+          <td class="text-center text-muted" style="font-size:.8rem">${i + 1}</td>
+          <td>${it.order_number || '-'}</td>
+          <td>${it.doc_number || '-'}</td>
+          <td>${it.date || '-'}</td>
+          <td>${it.workshop || '-'}</td>
+          <td>${it.mold_id || '-'}</td>
+          <td>${it.mold_name || '-'}</td>
+          <td class="text-end fw-bold" style="color:${cost ? '#1a6e3a' : '#aaa'}">
+            ${cost ? cost.toFixed(2) : '0.00'}
+          </td>
+          <td class="text-muted" style="font-size:.85rem">${it.notes || ''}</td>
+        </tr>`;
+    });
+
+    if (!rows.length) {
+      document.getElementById('costBody').innerHTML = `<tr><td colspan="9" class="text-center text-muted p-3">${month ? '该月暂无数据' : '暂无数据'}</td></tr>`;
+      return;
+    }
+
+    document.getElementById('costBody').innerHTML = rows.join('') + `
+      <tr style="font-weight:700;background:#f0f7f0">
+        <td colspan="7" class="text-end">合计（共 ${items.length} 条）</td>
+        <td class="text-end" style="color:#1a6e3a">${totalCost.toFixed(2)}</td>
+        <td></td>
+      </tr>`;
   });
 }
 
@@ -488,6 +595,92 @@ function renderStats() {
       <td class="text-end" style="color:#1a6e3a">${totalAmount.toFixed(2)}</td>
       <td></td>
     </tr>`;
+}
+
+// ── 打印汇总表 ──────────────────────────────────────────────────────────────
+function printTable(type) {
+  const isStats = type === 'stats';
+  const title = isStats ? '工程原料汇总表' : '啤办费用表';
+  const month = isStats
+    ? (document.getElementById('matMonth')?.value || '')
+    : (document.getElementById('costMonth')?.value || '');
+  const monthLabel = month || '全部';
+
+  let tableHtml;
+  if (isStats) {
+    // 原料汇总表：只打印有使用量的原料
+    const used = statsData.filter(s => s.total_actual_weight > 0 || s.total_amount > 0);
+    let tw = 0, ta = 0;
+    const trs = used.map((s, i) => {
+      tw += s.total_actual_weight || 0;
+      ta += s.total_amount || 0;
+      return `<tr>
+        <td class="text-center">${i + 1}</td>
+        <td>${s.material}</td>
+        <td class="text-end">${s.unit_price || '-'}</td>
+        <td class="text-end">${s.total_actual_weight ? s.total_actual_weight.toFixed(2) : '-'}</td>
+        <td class="text-end fw-bold" style="color:#1a6e3a">${s.total_amount ? s.total_amount.toFixed(2) : '0.00'}</td>
+        <td>${s.notes || ''}</td>
+      </tr>`;
+    }).join('');
+    tableHtml = `<table>
+      <thead><tr><th>序号</th><th>原料型号</th><th>原料单价(HKD/KG)</th><th>总实领重量(KG)</th><th>工程原料总费用(HKD)</th><th>备注</th></tr></thead>
+      <tbody>${trs}
+        <tr style="font-weight:700;background:#f0f7f0">
+          <td colspan="3" class="text-end">合计（共 ${used.length} 条）</td>
+          <td class="text-end">${tw ? tw.toFixed(2) : '-'}</td>
+          <td class="text-end" style="color:#1a6e3a">${ta.toFixed(2)}</td>
+          <td></td>
+        </tr>
+      </tbody></table>`;
+  } else {
+    const tableEl = document.getElementById('costTable');
+    if (!tableEl) return;
+    tableHtml = tableEl.outerHTML;
+  }
+
+  const win = window.open('', '_blank');
+  win.document.write(`<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>${title}</title>
+  <style>
+    body { font-family: 'Microsoft YaHei', sans-serif; margin: 0; padding: 16px; }
+    .print-header { text-align: center; margin-bottom: 12px; }
+    .print-header h2 { margin: 0 0 4px; font-size: 18pt; }
+    .print-header p { margin: 0; font-size: 10pt; color: #555; }
+    table { width: 100%; border-collapse: collapse; font-size: 9pt; }
+    th, td { border: 1px solid #333; padding: 3px 6px; }
+    th { background: #e8e8e8; font-weight: bold; text-align: center; white-space: nowrap; }
+    td { vertical-align: middle; }
+    .text-end { text-align: right; }
+    .text-center { text-align: center; }
+    .text-muted { color: #6c757d; }
+    .fw-bold { font-weight: bold; }
+    .print-controls { position: fixed; top: 10px; right: 10px; z-index: 999; }
+    @media print {
+      .print-controls { display: none; }
+      @page { margin: 8mm 10mm; size: A4 landscape; }
+      thead { display: table-header-group; }
+      tr { page-break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <div class="print-controls">
+    <button onclick="window.print()" style="padding:6px 16px;font-size:14px;cursor:pointer">打印</button>
+    <button onclick="window.close()" style="padding:6px 16px;font-size:14px;cursor:pointer;margin-left:4px">关闭</button>
+  </div>
+  <div class="print-header">
+    <h2>东莞华登塑胶制品有限公司</h2>
+    <p>${title}　　月份：${monthLabel}　　打印日期：${new Date().toLocaleDateString('zh-CN')}</p>
+  </div>
+  ${tableHtml}
+</body>
+</html>`);
+  win.document.close();
+  setTimeout(() => win.print(), 500);
 }
 </script>
 </body>
