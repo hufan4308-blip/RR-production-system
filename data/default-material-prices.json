@@ -1,0 +1,1002 @@
+[
+  {
+    "material": "PP EP332K",
+    "unit_price": 3.67,
+    "notes": ""
+  },
+  {
+    "material": "PP K8009",
+    "unit_price": 3.9,
+    "notes": ""
+  },
+  {
+    "material": "PP 3015",
+    "unit_price": 3.8,
+    "notes": ""
+  },
+  {
+    "material": "普通PP 1120",
+    "unit_price": 3.76,
+    "notes": ""
+  },
+  {
+    "material": "PP HJ730L",
+    "unit_price": 5.95,
+    "notes": ""
+  },
+  {
+    "material": "透明PP RJ770",
+    "unit_price": 7.4,
+    "notes": ""
+  },
+  {
+    "material": "透明PP 5090T",
+    "unit_price": 4.4301,
+    "notes": ""
+  },
+  {
+    "material": "ABS750",
+    "unit_price": 4.62,
+    "notes": ""
+  },
+  {
+    "material": "ABS MG47F",
+    "unit_price": 4.6,
+    "notes": ""
+  },
+  {
+    "material": "ABS-KF740",
+    "unit_price": 5.34,
+    "notes": ""
+  },
+  {
+    "material": "ABS 5000",
+    "unit_price": 6.46,
+    "notes": ""
+  },
+  {
+    "material": "ABS-HP181",
+    "unit_price": 6.46,
+    "notes": ""
+  },
+  {
+    "material": "ABS PA-747",
+    "unit_price": 9.2922,
+    "notes": ""
+  },
+  {
+    "material": "防火ABS-1000",
+    "unit_price": 14.93,
+    "notes": ""
+  },
+  {
+    "material": "透明ABS 990/920",
+    "unit_price": 9.73,
+    "notes": ""
+  },
+  {
+    "material": "透明ABS TR558/0520",
+    "unit_price": 8.05,
+    "notes": ""
+  },
+  {
+    "material": "透明ABS TR557",
+    "unit_price": 10.58,
+    "notes": ""
+  },
+  {
+    "material": "HIPS HI425",
+    "unit_price": 4.94,
+    "notes": ""
+  },
+  {
+    "material": "GPPS MW-1-301",
+    "unit_price": 10.39,
+    "notes": ""
+  },
+  {
+    "material": "HDPE HMA016",
+    "unit_price": 6.9437,
+    "notes": ""
+  },
+  {
+    "material": "LDPE G812/260",
+    "unit_price": 6.74,
+    "notes": ""
+  },
+  {
+    "material": "POM F30-03",
+    "unit_price": 7.2,
+    "notes": ""
+  },
+  {
+    "material": "POM M90-44",
+    "unit_price": 9.667,
+    "notes": ""
+  },
+  {
+    "material": "超韧POM-PM820",
+    "unit_price": 15.15,
+    "notes": ""
+  },
+  {
+    "material": "超韧POM-PM830",
+    "unit_price": 15.31,
+    "notes": ""
+  },
+  {
+    "material": "POM 100P",
+    "unit_price": 13.67,
+    "notes": ""
+  },
+  {
+    "material": "POM 690",
+    "unit_price": 15.45,
+    "notes": ""
+  },
+  {
+    "material": "K料",
+    "unit_price": 11.9,
+    "notes": ""
+  },
+  {
+    "material": "EVA UE630",
+    "unit_price": 7.9576,
+    "notes": ""
+  },
+  {
+    "material": "PVC本白50",
+    "unit_price": 4.7,
+    "notes": ""
+  },
+  {
+    "material": "PVC本白60",
+    "unit_price": 4.81,
+    "notes": ""
+  },
+  {
+    "material": "PVC本白65",
+    "unit_price": 5.28,
+    "notes": ""
+  },
+  {
+    "material": "PVC本白70",
+    "unit_price": 4.6,
+    "notes": ""
+  },
+  {
+    "material": "PVC本白75",
+    "unit_price": 4.61,
+    "notes": ""
+  },
+  {
+    "material": "PVC本白80",
+    "unit_price": 4.54,
+    "notes": ""
+  },
+  {
+    "material": "PVC本白85",
+    "unit_price": 4.59,
+    "notes": ""
+  },
+  {
+    "material": "PVC本白90",
+    "unit_price": 4.58,
+    "notes": ""
+  },
+  {
+    "material": "PVC本白95",
+    "unit_price": 4.7,
+    "notes": ""
+  },
+  {
+    "material": "PVC本白100",
+    "unit_price": 4.49,
+    "notes": ""
+  },
+  {
+    "material": "PVC85度雾面本白",
+    "unit_price": 5.11,
+    "notes": ""
+  },
+  {
+    "material": "PVC90度半雾本白",
+    "unit_price": 5.26,
+    "notes": ""
+  },
+  {
+    "material": "PVC70度雾面本白",
+    "unit_price": 5.33,
+    "notes": ""
+  },
+  {
+    "material": "PVC60移印特透明",
+    "unit_price": 6.94,
+    "notes": ""
+  },
+  {
+    "material": "PVC透明60",
+    "unit_price": 5.56,
+    "notes": ""
+  },
+  {
+    "material": "PVC透明70",
+    "unit_price": 5.52,
+    "notes": ""
+  },
+  {
+    "material": "PVC透明75",
+    "unit_price": 5.56,
+    "notes": ""
+  },
+  {
+    "material": "PVC透明80",
+    "unit_price": 5.39,
+    "notes": ""
+  },
+  {
+    "material": "PVC透明85",
+    "unit_price": 5.52,
+    "notes": ""
+  },
+  {
+    "material": "PVC透明95",
+    "unit_price": 5.54,
+    "notes": ""
+  },
+  {
+    "material": "PVC透明100",
+    "unit_price": 5.47,
+    "notes": ""
+  },
+  {
+    "material": "1#PP 3015",
+    "unit_price": 4.1617,
+    "notes": ""
+  },
+  {
+    "material": "1#PP 7032E3",
+    "unit_price": 5.5,
+    "notes": ""
+  },
+  {
+    "material": "1#PP 7533",
+    "unit_price": 6.18,
+    "notes": ""
+  },
+  {
+    "material": "1#PP EP332K",
+    "unit_price": 3.9529,
+    "notes": ""
+  },
+  {
+    "material": "PP 3003",
+    "unit_price": 6.1323,
+    "notes": ""
+  },
+  {
+    "material": "PP J640N",
+    "unit_price": 3.8907,
+    "notes": ""
+  },
+  {
+    "material": "PP JM350",
+    "unit_price": 3.72,
+    "notes": ""
+  },
+  {
+    "material": "PP 5012XT",
+    "unit_price": 7.3354,
+    "notes": ""
+  },
+  {
+    "material": "PP EP332K 抽专用白色（Pantone 11-0601TCX)",
+    "unit_price": 6.729,
+    "notes": ""
+  },
+  {
+    "material": "PP K641",
+    "unit_price": 6.12,
+    "notes": ""
+  },
+  {
+    "material": "PP510-NA",
+    "unit_price": 6.1398,
+    "notes": ""
+  },
+  {
+    "material": "PP7523",
+    "unit_price": 7.4981,
+    "notes": ""
+  },
+  {
+    "material": "PPK7116",
+    "unit_price": 5.5756,
+    "notes": ""
+  },
+  {
+    "material": "PP黑抽",
+    "unit_price": 6.842,
+    "notes": ""
+  },
+  {
+    "material": "改性PP TB52",
+    "unit_price": 8.5,
+    "notes": ""
+  },
+  {
+    "material": "ABS 750NSW",
+    "unit_price": 4.5674,
+    "notes": ""
+  },
+  {
+    "material": "ABS 777D",
+    "unit_price": 13.08,
+    "notes": ""
+  },
+  {
+    "material": "ABS AG15A1",
+    "unit_price": 6.4517,
+    "notes": ""
+  },
+  {
+    "material": "ABS5000",
+    "unit_price": 5.4895,
+    "notes": ""
+  },
+  {
+    "material": "ABS KF-740",
+    "unit_price": 4.6354,
+    "notes": ""
+  },
+  {
+    "material": "ABS MG47F NA1001",
+    "unit_price": 4.9421,
+    "notes": ""
+  },
+  {
+    "material": "ABS GP35",
+    "unit_price": 4.7625,
+    "notes": ""
+  },
+  {
+    "material": "ABS 709S",
+    "unit_price": 8.0192,
+    "notes": ""
+  },
+  {
+    "material": "750ABS抽米白遮光",
+    "unit_price": 6.7516,
+    "notes": ""
+  },
+  {
+    "material": "ABS GP22",
+    "unit_price": 4.6608,
+    "notes": ""
+  },
+  {
+    "material": "ABS PA-757",
+    "unit_price": 9.51,
+    "notes": ""
+  },
+  {
+    "material": "ABS WU1GY14-RO（再生）",
+    "unit_price": 6.75,
+    "notes": ""
+  },
+  {
+    "material": "ABS 灰色抽粒（恐龙专用）",
+    "unit_price": 4.8487,
+    "notes": ""
+  },
+  {
+    "material": "ABS黑抽",
+    "unit_price": 4.8561,
+    "notes": ""
+  },
+  {
+    "material": "ABS PA-709H",
+    "unit_price": 9.9484,
+    "notes": ""
+  },
+  {
+    "material": "明ABS E3077A",
+    "unit_price": 11.9866,
+    "notes": ""
+  },
+  {
+    "material": "明ABSCL",
+    "unit_price": 12.5935,
+    "notes": ""
+  },
+  {
+    "material": "明ABSTX0520",
+    "unit_price": 7.4621,
+    "notes": ""
+  },
+  {
+    "material": "普通PP 6331",
+    "unit_price": 4.48,
+    "notes": ""
+  },
+  {
+    "material": "普通PP1120",
+    "unit_price": 4.1503,
+    "notes": ""
+  },
+  {
+    "material": "透明MABS 920",
+    "unit_price": 11.2804,
+    "notes": ""
+  },
+  {
+    "material": "透明MABS TR557",
+    "unit_price": 11.9499,
+    "notes": ""
+  },
+  {
+    "material": "透明MABS TR558AI",
+    "unit_price": 11.8904,
+    "notes": ""
+  },
+  {
+    "material": "改性透明MABS A12",
+    "unit_price": 11.2,
+    "notes": ""
+  },
+  {
+    "material": "改性透明MABS SY77AB-605",
+    "unit_price": 12.1985,
+    "notes": ""
+  },
+  {
+    "material": "透明PP 8491",
+    "unit_price": 7.9352,
+    "notes": ""
+  },
+  {
+    "material": "透明PP CI571",
+    "unit_price": 7.7598,
+    "notes": ""
+  },
+  {
+    "material": "透明TPE D-1370A",
+    "unit_price": 17.6588,
+    "notes": ""
+  },
+  {
+    "material": "E4869 K料增韧剂",
+    "unit_price": 19.1559,
+    "notes": ""
+  },
+  {
+    "material": "EPS V6071T",
+    "unit_price": 12.28,
+    "notes": ""
+  },
+  {
+    "material": "EVA 14-2",
+    "unit_price": 9.74,
+    "notes": ""
+  },
+  {
+    "material": "HDPE 5502BN",
+    "unit_price": 3.9818,
+    "notes": ""
+  },
+  {
+    "material": "HIPS PS-350",
+    "unit_price": 4.321,
+    "notes": ""
+  },
+  {
+    "material": "HIPS黑抽",
+    "unit_price": 5.804,
+    "notes": ""
+  },
+  {
+    "material": "HS100-90A01 HIPS增韧剂",
+    "unit_price": 10.9377,
+    "notes": ""
+  },
+  {
+    "material": "HS410-608 TPR60度",
+    "unit_price": 10.9213,
+    "notes": ""
+  },
+  {
+    "material": "HS410-8506 TPR85度",
+    "unit_price": 11.0663,
+    "notes": ""
+  },
+  {
+    "material": "K料 KR-03NW",
+    "unit_price": 10.3041,
+    "notes": ""
+  },
+  {
+    "material": "K料 KR38",
+    "unit_price": 14.995,
+    "notes": ""
+  },
+  {
+    "material": "改性K料 K Q胶",
+    "unit_price": 13.35,
+    "notes": ""
+  },
+  {
+    "material": "LDPE 260GG",
+    "unit_price": 5.65,
+    "notes": ""
+  },
+  {
+    "material": "LLDPE218WJ",
+    "unit_price": 3.48,
+    "notes": ""
+  },
+  {
+    "material": "PA6 1010C2",
+    "unit_price": 11.5748,
+    "notes": ""
+  },
+  {
+    "material": "PA6 B30S",
+    "unit_price": 21.2207,
+    "notes": ""
+  },
+  {
+    "material": "PA66 12C8021",
+    "unit_price": 15.35,
+    "notes": ""
+  },
+  {
+    "material": "PA66 215",
+    "unit_price": 21.28,
+    "notes": ""
+  },
+  {
+    "material": "PA66 21SPC",
+    "unit_price": 19.93,
+    "notes": ""
+  },
+  {
+    "material": "PA66 ST801",
+    "unit_price": 29.7028,
+    "notes": ""
+  },
+  {
+    "material": "改性尼龙 PA12-E201N",
+    "unit_price": 21.4848,
+    "notes": ""
+  },
+  {
+    "material": "改性尼龙PA66-2710",
+    "unit_price": 18.0299,
+    "notes": ""
+  },
+  {
+    "material": "改性尼龙PA66-2720",
+    "unit_price": 18.0212,
+    "notes": ""
+  },
+  {
+    "material": "PC 1100CR/6710",
+    "unit_price": 13.5204,
+    "notes": ""
+  },
+  {
+    "material": "PC HS152R",
+    "unit_price": 7.63,
+    "notes": ""
+  },
+  {
+    "material": "PC-182S",
+    "unit_price": 7.1389,
+    "notes": ""
+  },
+  {
+    "material": "PC/ABS2300",
+    "unit_price": 8.78,
+    "notes": ""
+  },
+  {
+    "material": "PC/ABS2300蓝抽",
+    "unit_price": 10.9642,
+    "notes": ""
+  },
+  {
+    "material": "PCR HIPS 610-WH-F",
+    "unit_price": 9.2698,
+    "notes": ""
+  },
+  {
+    "material": "PCTG JN200",
+    "unit_price": 21.61,
+    "notes": ""
+  },
+  {
+    "material": "PETG K2012",
+    "unit_price": 11.7931,
+    "notes": ""
+  },
+  {
+    "material": "POE P84T-9D8",
+    "unit_price": 15.7834,
+    "notes": ""
+  },
+  {
+    "material": "POE RP850",
+    "unit_price": 15.2193,
+    "notes": ""
+  },
+  {
+    "material": "POK YM-FM060",
+    "unit_price": 15.3179,
+    "notes": ""
+  },
+  {
+    "material": "POM DM220",
+    "unit_price": 18.4075,
+    "notes": ""
+  },
+  {
+    "material": "DM230",
+    "unit_price": 14.05,
+    "notes": ""
+  },
+  {
+    "material": "POM PM820",
+    "unit_price": 17.0319,
+    "notes": ""
+  },
+  {
+    "material": "POM小塑胶粒",
+    "unit_price": 9.58,
+    "notes": ""
+  },
+  {
+    "material": "改性POM 930",
+    "unit_price": 15.713,
+    "notes": ""
+  },
+  {
+    "material": "日本POM",
+    "unit_price": 6.4,
+    "notes": ""
+  },
+  {
+    "material": "SAN 310NTR",
+    "unit_price": 7.8124,
+    "notes": ""
+  },
+  {
+    "material": "SAN NEF",
+    "unit_price": 8.3,
+    "notes": ""
+  },
+  {
+    "material": "TPE 5度 1207T620",
+    "unit_price": 10.7113,
+    "notes": ""
+  },
+  {
+    "material": "TPE 20度 GP200-20A",
+    "unit_price": 11.7744,
+    "notes": ""
+  },
+  {
+    "material": "TPE 30度本 XB-2130N",
+    "unit_price": 17.1022,
+    "notes": ""
+  },
+  {
+    "material": "TPE 40度本 XG-5540",
+    "unit_price": 11.5819,
+    "notes": ""
+  },
+  {
+    "material": "TPE 55度M955BT-A01",
+    "unit_price": 9.5963,
+    "notes": ""
+  },
+  {
+    "material": "TPE 65度 GP520-65",
+    "unit_price": 9.7,
+    "notes": ""
+  },
+  {
+    "material": "TPE 70度 GP310-70",
+    "unit_price": 9.7,
+    "notes": ""
+  },
+  {
+    "material": "TPE 70度 XB-7370N本白",
+    "unit_price": 15.3628,
+    "notes": ""
+  },
+  {
+    "material": "TPE 75度 GP310-75",
+    "unit_price": 13.1,
+    "notes": ""
+  },
+  {
+    "material": "TPE 802绿色",
+    "unit_price": 14.2097,
+    "notes": ""
+  },
+  {
+    "material": "TPE 80度 GP310-80",
+    "unit_price": 13.1,
+    "notes": ""
+  },
+  {
+    "material": "TPE 80度GP520-80",
+    "unit_price": 10.5626,
+    "notes": ""
+  },
+  {
+    "material": "TPE I480DT-A01",
+    "unit_price": 8.79,
+    "notes": ""
+  },
+  {
+    "material": "TPE15度 I115VN-B3857",
+    "unit_price": 8.9365,
+    "notes": ""
+  },
+  {
+    "material": "TPE55度 GP210-5001",
+    "unit_price": 12.0434,
+    "notes": ""
+  },
+  {
+    "material": "TPE80度 XG-3980N本",
+    "unit_price": 10.39,
+    "notes": ""
+  },
+  {
+    "material": "TPE80度 XG-3980N明",
+    "unit_price": 10.1193,
+    "notes": ""
+  },
+  {
+    "material": "TPE 90度本白 XG-5190N",
+    "unit_price": 13.35,
+    "notes": ""
+  },
+  {
+    "material": "TPE90度本白 XB-7890N",
+    "unit_price": 17.1602,
+    "notes": ""
+  },
+  {
+    "material": "TPR I602BT-B5478",
+    "unit_price": 7.57,
+    "notes": ""
+  },
+  {
+    "material": "TPR I603BT-B4709",
+    "unit_price": 7.57,
+    "notes": ""
+  },
+  {
+    "material": "TPR 5度本白 XD-2405N",
+    "unit_price": 12.01,
+    "notes": ""
+  },
+  {
+    "material": "TPR I455NN-P806",
+    "unit_price": 8.855,
+    "notes": ""
+  },
+  {
+    "material": "TPR10度",
+    "unit_price": 8.75,
+    "notes": ""
+  },
+  {
+    "material": "TPR 14度（1414VT-464）",
+    "unit_price": 11.6532,
+    "notes": ""
+  },
+  {
+    "material": "TPR 40度",
+    "unit_price": 8.4518,
+    "notes": ""
+  },
+  {
+    "material": "TPR 60度透明",
+    "unit_price": 10.2075,
+    "notes": ""
+  },
+  {
+    "material": "TPR 65度（本白）",
+    "unit_price": 11.9812,
+    "notes": ""
+  },
+  {
+    "material": "TPR 70度",
+    "unit_price": 9.3018,
+    "notes": ""
+  },
+  {
+    "material": "TPR 75度本（I975VN-L613",
+    "unit_price": 14.9756,
+    "notes": ""
+  },
+  {
+    "material": "TPR 75度GP520-7504)",
+    "unit_price": 10.7131,
+    "notes": ""
+  },
+  {
+    "material": "TPR I985BT-A01",
+    "unit_price": 15.5544,
+    "notes": ""
+  },
+  {
+    "material": "TPR 90度本白 XD-1190N",
+    "unit_price": 11.8796,
+    "notes": ""
+  },
+  {
+    "material": "TPR 90度 GF-TE5020-9012A",
+    "unit_price": 7.5912,
+    "notes": ""
+  },
+  {
+    "material": "PVC 30度（本白）",
+    "unit_price": 4.91,
+    "notes": ""
+  },
+  {
+    "material": "PVC 35度（本白）",
+    "unit_price": 5.19,
+    "notes": ""
+  },
+  {
+    "material": "PVC 40度（本白）",
+    "unit_price": 5.2255,
+    "notes": ""
+  },
+  {
+    "material": "PVC 45度（本白）",
+    "unit_price": 4.8133,
+    "notes": ""
+  },
+  {
+    "material": "PVC 50度 （本白）",
+    "unit_price": 5.2563,
+    "notes": ""
+  },
+  {
+    "material": "PVC 55度（本白）",
+    "unit_price": 5.105,
+    "notes": ""
+  },
+  {
+    "material": "PVC60度本",
+    "unit_price": 5.0191,
+    "notes": ""
+  },
+  {
+    "material": "PVC 65度本白",
+    "unit_price": 4.9992,
+    "notes": ""
+  },
+  {
+    "material": "PVC 70度本白",
+    "unit_price": 5.0146,
+    "notes": ""
+  },
+  {
+    "material": "PVC 75度本白",
+    "unit_price": 4.7683,
+    "notes": ""
+  },
+  {
+    "material": "PVC 80度本白",
+    "unit_price": 4.9661,
+    "notes": ""
+  },
+  {
+    "material": "PVC 85度本白",
+    "unit_price": 4.9437,
+    "notes": ""
+  },
+  {
+    "material": "PVC 90度本白",
+    "unit_price": 4.8782,
+    "notes": ""
+  },
+  {
+    "material": "PVC 95度本白",
+    "unit_price": 4.9002,
+    "notes": ""
+  },
+  {
+    "material": "PVC 100度（本白）",
+    "unit_price": 5.1666,
+    "notes": ""
+  },
+  {
+    "material": "PVC 110度本白",
+    "unit_price": 5.0785,
+    "notes": ""
+  },
+  {
+    "material": "PVC80度雾面哑色",
+    "unit_price": 5.1624,
+    "notes": ""
+  },
+  {
+    "material": "PVC90度雾面哑色",
+    "unit_price": 5.161,
+    "notes": ""
+  },
+  {
+    "material": "PVC30度明",
+    "unit_price": 6.0382,
+    "notes": ""
+  },
+  {
+    "material": "PVC 50度透明",
+    "unit_price": 6.671,
+    "notes": ""
+  },
+  {
+    "material": "PVC 60度 移印特透明",
+    "unit_price": 6.2693,
+    "notes": ""
+  },
+  {
+    "material": "PVC 65度透明",
+    "unit_price": 5.9633,
+    "notes": ""
+  },
+  {
+    "material": "PVC70度特透明",
+    "unit_price": 6.2068,
+    "notes": ""
+  },
+  {
+    "material": "PVC 75度透明",
+    "unit_price": 5.9508,
+    "notes": ""
+  },
+  {
+    "material": "PVC 80度（透明）",
+    "unit_price": 5.9516,
+    "notes": ""
+  },
+  {
+    "material": "PVC 85度透明",
+    "unit_price": 6.0382,
+    "notes": ""
+  },
+  {
+    "material": "PVC 90度透明",
+    "unit_price": 5.7576,
+    "notes": ""
+  },
+  {
+    "material": "PVC 90度透明蓝底",
+    "unit_price": 5.835,
+    "notes": ""
+  },
+  {
+    "material": "PVC 95度透明",
+    "unit_price": 5.8266,
+    "notes": ""
+  },
+  {
+    "material": "PVC 100度透明",
+    "unit_price": 5.9771,
+    "notes": ""
+  },
+  {
+    "material": "PVC 120度透明",
+    "unit_price": 6.06,
+    "notes": ""
+  }
+]

@@ -11,58 +11,14 @@ const DATA_FILE = path.join(DATA_DIR, 'data.json');
 // ─── JSON 文件存储 ───────────────────────────────────────────────────────────
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 
-const DEFAULT_MATERIAL_PRICES = [
-  {material:'PP EP332K',unit_price:3.67,notes:''},
-  {material:'PP K8009',unit_price:3.90,notes:''},
-  {material:'PP 3015',unit_price:3.80,notes:''},
-  {material:'普通PP 1120',unit_price:3.76,notes:''},
-  {material:'PP HJ730L',unit_price:5.95,notes:''},
-  {material:'透明PP RJ770',unit_price:5.88,notes:''},
-  {material:'透明PP 5090T',unit_price:4.10,notes:''},
-  {material:'ABS750',unit_price:4.62,notes:''},
-  {material:'ABS MG47F',unit_price:4.60,notes:''},
-  {material:'ABS-KF740',unit_price:5.34,notes:''},
-  {material:'ABS 5000',unit_price:6.46,notes:''},
-  {material:'ABS-HP181',unit_price:6.46,notes:''},
-  {material:'ABS PA-747',unit_price:6.91,notes:''},
-  {material:'防火ABS-1000',unit_price:14.93,notes:''},
-  {material:'透明ABS 990/920',unit_price:9.73,notes:''},
-  {material:'透明ABS TR558/0520',unit_price:8.05,notes:''},
-  {material:'透明ABS TR557',unit_price:10.58,notes:''},
-  {material:'HIPS HI425',unit_price:4.94,notes:''},
-  {material:'GPPS MW-1-301',unit_price:9.99,notes:''},
-  {material:'HDPE HMA016',unit_price:7.80,notes:''},
-  {material:'LDPE G812/260',unit_price:6.74,notes:''},
-  {material:'POM F30-03',unit_price:6.80,notes:''},
-  {material:'POM M90-44',unit_price:9.98,notes:''},
-  {material:'超韧POM-PM820',unit_price:15.15,notes:''},
-  {material:'超韧POM-PM830',unit_price:15.31,notes:''},
-  {material:'POM 100P',unit_price:13.67,notes:''},
-  {material:'POM 690',unit_price:15.45,notes:''},
-  {material:'K料',unit_price:11.90,notes:''},
-  {material:'EVA UE630',unit_price:15.41,notes:''},
-  {material:'PVC本白50',unit_price:4.70,notes:''},
-  {material:'PVC本白60',unit_price:4.81,notes:''},
-  {material:'PVC本白65',unit_price:5.28,notes:''},
-  {material:'PVC本白70',unit_price:4.60,notes:''},
-  {material:'PVC本白75',unit_price:4.61,notes:''},
-  {material:'PVC本白80',unit_price:4.54,notes:''},
-  {material:'PVC本白85',unit_price:4.59,notes:''},
-  {material:'PVC本白90',unit_price:4.58,notes:''},
-  {material:'PVC本白95',unit_price:4.70,notes:''},
-  {material:'PVC本白100',unit_price:4.49,notes:''},
-  {material:'PVC85度雾面本白',unit_price:5.11,notes:''},
-  {material:'PVC90度半雾本白',unit_price:5.26,notes:''},
-  {material:'PVC70度雾面本白',unit_price:5.33,notes:''},
-  {material:'PVC60移印特透明',unit_price:6.94,notes:''},
-  {material:'PVC透明60',unit_price:5.56,notes:''},
-  {material:'PVC透明70',unit_price:5.52,notes:''},
-  {material:'PVC透明75',unit_price:5.56,notes:''},
-  {material:'PVC透明80',unit_price:5.39,notes:''},
-  {material:'PVC透明85',unit_price:5.52,notes:''},
-  {material:'PVC透明95',unit_price:5.54,notes:''},
-  {material:'PVC透明100',unit_price:5.47,notes:''},
-];
+// 默认原料价格从文件读取（200条完整数据）
+const DEFAULT_PRICES_FILE = path.join(DATA_DIR, 'default-material-prices.json');
+let DEFAULT_MATERIAL_PRICES = [];
+try {
+  DEFAULT_MATERIAL_PRICES = JSON.parse(fs.readFileSync(DEFAULT_PRICES_FILE, 'utf8'));
+} catch (e) {
+  console.warn('Warning: default-material-prices.json not found, starting with empty prices');
+}
 
 function loadData() {
   if (!fs.existsSync(DATA_FILE)) return initData();
