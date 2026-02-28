@@ -75,7 +75,16 @@
           <button class="btn btn-sm btn-outline-warning" onclick="document.getElementById('matMonth').value='';loadStats()" title="显示全部月份">
             全部
           </button>
-          <div class="input-group input-group-sm" style="width:220px">
+          <div class="input-group input-group-sm" style="width:200px">
+            <span class="input-group-text"><i class="bi bi-search"></i></span>
+            <input type="text" class="form-control" id="matOrderSearch"
+              placeholder="搜索订单编号..." autocomplete="off">
+            <button class="btn btn-outline-secondary"
+              onclick="document.getElementById('matOrderSearch').value='';loadStats()" title="清除">
+              <i class="bi bi-x-lg"></i>
+            </button>
+          </div>
+          <div class="input-group input-group-sm" style="width:200px">
             <span class="input-group-text"><i class="bi bi-search"></i></span>
             <input type="text" class="form-control" id="matSearch"
               placeholder="搜索原料型号..." oninput="renderStats()" autocomplete="off">
@@ -127,6 +136,15 @@
           <button class="btn btn-sm btn-outline-warning" onclick="document.getElementById('costMonth').value='';loadCostData()" title="显示全部月份">
             全部
           </button>
+          <div class="input-group input-group-sm" style="width:220px">
+            <span class="input-group-text"><i class="bi bi-search"></i></span>
+            <input type="text" class="form-control" id="costSearch"
+              placeholder="搜索订单编号..." oninput="renderCostData()" autocomplete="off">
+            <button class="btn btn-outline-secondary"
+              onclick="document.getElementById('costSearch').value='';renderCostData()" title="清除">
+              <i class="bi bi-x-lg"></i>
+            </button>
+          </div>
           <button class="btn btn-sm btn-outline-secondary" onclick="loadCostData()">
             <i class="bi bi-arrow-clockwise me-1"></i>刷新数据
           </button>
@@ -229,6 +247,13 @@ function loadOrders() {
     fetch('/api/injection').then(r => r.json()),
     fetch('/api/problems?type=injection').then(r => r.json())
   ]).then(([orders, problems]) => {
+    // 只显示经理审核通过后的订单（待生产/生产中/已完成/已取消）
+    orders = orders.filter(o => ['待生产','生产中','已完成','已取消'].includes(o.status));
+    // 提取每个订单的要求完成时间（取 items 中最早的 completion_time）
+    orders.forEach(o => {
+      const times = (o.items || []).map(it => it.completion_time).filter(Boolean);
+      o.completion_time_display = times.length ? times.sort()[0] : '';
+    });
     allOrders = orders;
     problemsMap = {};
     problems.filter(p => p.status === '待处理').forEach(p => {
@@ -253,6 +278,7 @@ function renderOrders(orders) {
       <td>${o.workshop || '-'}</td>
       <td>${o.supervisor || '-'}</td>
       <td>${o.eng_name || '-'}</td>
+      <td style="color:#d63384;font-weight:500">${o.completion_time_display || '-'}</td>
       <td>${o.reason || '-'}</td>
       <td>
         ${statusBadge(o.status)}
@@ -274,7 +300,7 @@ function renderOrders(orders) {
   document.getElementById('orderList').innerHTML = `
     <table class="table table-hover table-sm mb-0">
       <thead class="table-dark">
-        <tr><th>订单编号</th><th>日期</th><th>类型</th><th>车间</th><th>主管</th><th>跟进工程师</th><th>原因</th><th>状态</th><th>处理</th></tr>
+        <tr><th>订单编号</th><th>日期</th><th>类型</th><th>车间</th><th>主管</th><th>跟进工程师</th><th style="color:#f9a8d4">要求完成时间</th><th>原因</th><th>状态</th><th>处理</th></tr>
       </thead>
       <tbody>${rows}</tbody>
     </table>`;
@@ -357,6 +383,17 @@ function viewOrder(id) {
           </table>
         </div>`;
 
+      // 已完成订单：锁定除啤办费用外的所有输入
+      if (order.status === '已完成') {
+        document.querySelectorAll('#machineItemsBody input').forEach(inp => {
+          if (inp.name !== 'injection_cost') {
+            inp.disabled = true;
+            inp.style.background = '#f0f0f0';
+          }
+        });
+        document.getElementById('saveMachineBtn').textContent = '保存啤办费用';
+      }
+
       new bootstrap.Modal(document.getElementById('detailModal')).show();
     });
 }
@@ -372,13 +409,14 @@ function autoCalcAmt(input) {
 }
 
 function saveMachineData(orderId) {
+  const gv = (tr, name) => { const el = tr.querySelector(`[name="${name}"]`); return el ? el.value : ''; };
   const updates = Array.from(document.getElementById('machineItemsBody').querySelectorAll('tr[data-item-id]')).map(tr => ({
     id:                   +tr.dataset.itemId,
-    receipt_no:           tr.querySelector('[name="receipt_no"]').value,
-    collected_weight_kg:  parseFloat(tr.querySelector('[name="collected_weight_kg"]').value)  || null,
-    actual_weight_kg:     parseFloat(tr.querySelector('[name="actual_weight_kg"]').value)     || null,
-    actual_amount_hkd:    parseFloat(tr.querySelector('[name="actual_amount_hkd"]').value)    || null,
-    injection_cost:       parseFloat(tr.querySelector('[name="injection_cost"]').value)       || null,
+    receipt_no:           gv(tr, 'receipt_no'),
+    collected_weight_kg:  parseFloat(gv(tr, 'collected_weight_kg'))  || null,
+    actual_weight_kg:     parseFloat(gv(tr, 'actual_weight_kg'))     || null,
+    actual_amount_hkd:    parseFloat(gv(tr, 'actual_amount_hkd'))    || null,
+    injection_cost:       parseFloat(gv(tr, 'injection_cost'))       || null,
   }));
   fetch(`/api/injection/${orderId}/items`, {
     method: 'PATCH',
@@ -489,6 +527,9 @@ fetch('/api/material-prices').then(r => r.json()).then(prices => {
 loadOrders();
 setInterval(loadOrders, 30000);
 
+// 订单编号搜索：按回车触发查询
+document.getElementById('matOrderSearch')?.addEventListener('keydown', e => { if (e.key === 'Enter') loadStats(); });
+
 // ── 标签页切换 ──────────────────────────────────────────────────────────────
 function switchInjTab(name, el) {
   document.querySelectorAll('#injMainTabs .nav-link').forEach(b => b.classList.remove('active'));
@@ -505,7 +546,11 @@ let statsData = [];
 
 function loadStats() {
   const month = document.getElementById('matMonth')?.value || '';
-  const statsUrl = month ? `/api/material-stats?month=${month}` : '/api/material-stats';
+  const orderQ = document.getElementById('matOrderSearch')?.value.trim() || '';
+  const params = new URLSearchParams();
+  if (month) params.set('month', month);
+  if (orderQ) params.set('order_number', orderQ);
+  const statsUrl = '/api/material-stats' + (params.toString() ? '?' + params : '');
   Promise.all([
     fetch(statsUrl).then(r => r.json()),
     fetch('/api/material-prices').then(r => r.json())
@@ -525,42 +570,53 @@ function loadStats() {
 }
 
 // ── 啤办费用表 ──────────────────────────────────────────────────────────────
+let costData = [];
+
 function loadCostData() {
   const month = document.getElementById('costMonth')?.value || '';
   const url = month ? `/api/injection-costs?month=${month}` : '/api/injection-costs';
   fetch(url).then(r => r.json()).then(items => {
-    let totalCost = 0;
-    const rows = items.map((it, i) => {
-      const cost = parseFloat(it.injection_cost) || 0;
-      totalCost += cost;
-      return `
-        <tr>
-          <td class="text-center text-muted" style="font-size:.8rem">${i + 1}</td>
-          <td>${it.order_number || '-'}</td>
-          <td>${it.doc_number || '-'}</td>
-          <td>${it.date || '-'}</td>
-          <td>${it.workshop || '-'}</td>
-          <td>${it.mold_id || '-'}</td>
-          <td>${it.mold_name || '-'}</td>
-          <td class="text-end fw-bold" style="color:${cost ? '#1a6e3a' : '#aaa'}">
-            ${cost ? cost.toFixed(2) : '0.00'}
-          </td>
-          <td class="text-muted" style="font-size:.85rem">${it.notes || ''}</td>
-        </tr>`;
-    });
+    costData = items;
+    renderCostData();
+  });
+}
 
-    if (!rows.length) {
-      document.getElementById('costBody').innerHTML = `<tr><td colspan="9" class="text-center text-muted p-3">${month ? '该月暂无数据' : '暂无数据'}</td></tr>`;
-      return;
-    }
+function renderCostData() {
+  const q = (document.getElementById('costSearch')?.value || '').trim().toLowerCase();
+  const filtered = q ? costData.filter(it => ((it.order_number || '') + (it.doc_number || '')).toLowerCase().includes(q)) : costData;
 
-    document.getElementById('costBody').innerHTML = rows.join('') + `
-      <tr style="font-weight:700;background:#f0f7f0">
-        <td colspan="7" class="text-end">合计（共 ${items.length} 条）</td>
-        <td class="text-end" style="color:#1a6e3a">${totalCost.toFixed(2)}</td>
-        <td></td>
+  if (!filtered.length) {
+    document.getElementById('costBody').innerHTML = `<tr><td colspan="9" class="text-center text-muted p-3">${q ? '没有匹配的订单' : '暂无数据'}</td></tr>`;
+    return;
+  }
+
+  let totalCost = 0;
+  const rows = filtered.map((it, i) => {
+    const cost = parseFloat(it.injection_cost) || 0;
+    totalCost += cost;
+    return `
+      <tr>
+        <td class="text-center text-muted" style="font-size:.8rem">${i + 1}</td>
+        <td>${it.order_number || '-'}</td>
+        <td>${it.doc_number || '-'}</td>
+        <td>${it.date || '-'}</td>
+        <td>${it.workshop || '-'}</td>
+        <td>${it.mold_id || '-'}</td>
+        <td>${it.mold_name || '-'}</td>
+        <td class="text-end fw-bold" style="color:${cost ? '#1a6e3a' : '#aaa'}">
+          ${cost ? cost.toFixed(2) : '0.00'}
+        </td>
+        <td class="text-muted" style="font-size:.85rem">${it.notes || ''}</td>
       </tr>`;
   });
+
+  const hint = q ? `（匹配 ${filtered.length} / ${costData.length} 条）` : `（共 ${filtered.length} 条）`;
+  document.getElementById('costBody').innerHTML = rows.join('') + `
+    <tr style="font-weight:700;background:#f0f7f0">
+      <td colspan="7" class="text-end">合计${hint}</td>
+      <td class="text-end" style="color:#1a6e3a">${totalCost.toFixed(2)}</td>
+      <td></td>
+    </tr>`;
 }
 
 function renderStats() {

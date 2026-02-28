@@ -52,7 +52,13 @@ function saveData(data) {
 // ─── 通用 CRUD 帮助 ─────────────────────────────────────────────────────────
 function getOrders(type) {
   const data = loadData();
-  return data[`${type}_orders`].sort((a, b) => b.id - a.id);
+  const orders = data[`${type}_orders`].sort((a, b) => b.id - a.id);
+  // 附带 items 信息（完成时间等）供前端显示
+  const items = data[`${type}_items`] || [];
+  orders.forEach(o => {
+    o.items = items.filter(i => i.order_id === o.id).sort((a,b) => a.sort_order - b.sort_order);
+  });
+  return orders;
 }
 
 function getOrderById(type, id) {
@@ -228,12 +234,18 @@ app.get('/api/material-stats', (req, res) => {
     };
   });
 
-  // 如有月份过滤，先找出该月订单 ID 集合
+  // 如有月份或订单编号过滤，先找出匹配的订单 ID 集合
+  const orderSearch = req.query.order_number; // optional order number search
   let validOrderIds = null;
-  if (month) {
+  if (month || orderSearch) {
+    const q = (orderSearch || '').toLowerCase();
     validOrderIds = new Set(
       (data.injection_orders || [])
-        .filter(o => (o.date || '').startsWith(month))
+        .filter(o => {
+          if (month && !(o.date || '').startsWith(month)) return false;
+          if (q && !((o.order_number || '') + (o.doc_number || '')).toLowerCase().includes(q)) return false;
+          return true;
+        })
         .map(o => o.id)
     );
   }

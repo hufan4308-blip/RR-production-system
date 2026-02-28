@@ -37,6 +37,8 @@
           <option>万志勇</option>
           <option>章发东</option>
           <option>刘际维</option>
+          <option>甘勇辉</option>
+          <option>王玉国</option>
         </select>
       </div>
       <div class="mb-3">
@@ -157,6 +159,8 @@ const SUPERVISOR_PINS = {
   '万志勇': '6605',
   '章发东': '6606',
   '刘际维': '6607',
+  '甘勇辉': '6608',
+  '王玉国': '6609',
 };
 
 // ─── 登录逻辑 ─────────────────────────────────────────────────────────────────
@@ -228,7 +232,8 @@ function loadSupOrders() {
   fetch(`/api/${supTab}`)
     .then(r => r.json())
     .then(orders => {
-      // 显示所有订单，但只能审核自己负责的
+      // 只显示分配给当前主管的订单
+      orders = orders.filter(o => o.supervisor === currentSupervisor);
       if (supFilter) orders = orders.filter(o => o.status === supFilter);
       orders.sort((a, b) => {
         const so = { '待审核':0,'待经理审核':1,'待生产':2,'生产中':3,'已完成':4,'已驳回':5 };

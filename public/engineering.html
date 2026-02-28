@@ -69,7 +69,8 @@
         <option value="A车间">A车间</option>
         <option value="B车间">B车间</option>
         <option value="华登车间">华登车间</option>
-        <option value="兴信车间">兴信车间</option>
+        <option value="湖南车间">湖南车间</option>
+        <option value="外厂">外厂</option>
       </select>
     </div>
     <div class="d-flex gap-2">
@@ -118,13 +119,13 @@
           </div>
           <div class="col-md-3"><label class="form-label fw-bold">车间</label>
             <select class="form-select" id="inj-workshop">
-              <option>A车间</option><option>B车间</option><option>华登车间</option><option>兴信车间</option>
+              <option>A车间</option><option>B车间</option><option>华登车间</option><option>湖南车间</option><option>外厂</option>
             </select>
           </div>
           <div class="col-md-3"><label class="form-label fw-bold">主管</label>
             <select class="form-select" id="inj-supervisor">
               <option value="">请选择主管</option>
-              <option>段新辉</option><option>唐海林</option><option>蒙海欢</option><option>万志勇</option><option>章发东</option><option>刘际维</option>
+              <option>段新辉</option><option>唐海林</option><option>蒙海欢</option><option>万志勇</option><option>章发东</option><option>刘际维</option><option>甘勇辉</option><option>王玉国</option>
             </select>
           </div>
           <div class="col-md-3"><label class="form-label fw-bold">跟进工程师</label><input class="form-control" id="inj-engineer" placeholder="请输入姓名"></div>
@@ -180,7 +181,7 @@
           <div class="col-md-3"><label class="form-label fw-bold">主管</label>
             <select class="form-select" id="slush-supervisor">
               <option value="">请选择主管</option>
-              <option>段新辉</option><option>唐海林</option><option>蒙海欢</option><option>万志勇</option><option>章发东</option><option>刘际维</option>
+              <option>段新辉</option><option>唐海林</option><option>蒙海欢</option><option>万志勇</option><option>章发东</option><option>刘际维</option><option>甘勇辉</option><option>王玉国</option>
             </select>
           </div>
           <div class="col-md-3"><label class="form-label fw-bold">跟进工程师</label><input class="form-control" id="slush-engineer" placeholder="请输入姓名"></div>
@@ -233,13 +234,13 @@
           </div>
           <div class="col-md-3"><label class="form-label fw-bold">车间</label>
             <select class="form-select" id="spray-workshop">
-              <option>兴信车间</option><option>华登车间</option>
+              <option>湖南车间</option><option>华登车间</option><option>外厂</option>
             </select>
           </div>
           <div class="col-md-3"><label class="form-label fw-bold">主管</label>
             <select class="form-select" id="spray-supervisor">
               <option value="">请选择主管</option>
-              <option>段新辉</option><option>唐海林</option><option>蒙海欢</option><option>万志勇</option><option>章发东</option><option>刘际维</option>
+              <option>段新辉</option><option>唐海林</option><option>蒙海欢</option><option>万志勇</option><option>章发东</option><option>刘际维</option><option>甘勇辉</option><option>王玉国</option>
             </select>
           </div>
           <div class="col-md-3"><label class="form-label fw-bold">跟进工程师</label><input class="form-control" id="spray-engineer" placeholder="请输入姓名"></div>
@@ -375,7 +376,8 @@
             <option value="A车间">A车间</option>
             <option value="B车间">B车间</option>
             <option value="华登车间">华登车间</option>
-            <option value="兴信车间">兴信车间</option>
+            <option value="湖南车间">湖南车间</option>
+            <option value="外厂">外厂</option>
           </select>
           <button class="btn btn-sm btn-outline-secondary" onclick="loadSummary()"><i class="bi bi-arrow-clockwise me-1"></i>刷新</button>
           <span id="summaryCount" class="text-muted small ms-1"></span>
@@ -542,7 +544,7 @@ function openNewModal() {
   document.getElementById(`${prefix}-status`).value = (currentTab === 'injection') ? '待审核' : '待生产';
   document.getElementById(`${prefix}-reason`).value = '';
   const wsElNew = document.getElementById(`${prefix}-workshop`);
-  if (wsElNew) wsElNew.value = prefix === 'inj' ? 'A车间' : '兴信车间';
+  if (wsElNew) wsElNew.value = prefix === 'inj' ? 'A车间' : '湖南车间';
   const supElNew = document.getElementById(`${prefix}-supervisor`);
   if (supElNew) supElNew.value = '';
   document.getElementById(`${prefix}-engineer`).value = '';
@@ -862,7 +864,8 @@ function showToast(msg, type = 'success') {
 // ─── 主管审核 ─────────────────────────────────────────────────────────────────
 const SUPERVISOR_PINS = {
   '段新辉': '6602', '唐海林': '6603',
-  '蒙海欢': '6604', '万志勇': '6605', '章发东': '6606', '刘际维': '6607'
+  '蒙海欢': '6604', '万志勇': '6605', '章发东': '6606', '刘际维': '6607',
+  '甘勇辉': '6608', '王玉国': '6609'
 };
 const MANAGER_PIN = { '易东存': '6601' };
 
@@ -1277,10 +1280,7 @@ function onExcelFileSelected() {
             if (el && !el.value) el.value = rMatch[1].trim();
           }
           // 车间识别（从公司名）
-          if (rowText.includes('兴信')) {
-            const el = document.getElementById(`${prefix === 'inj' ? 'inj' : prefix}-workshop`);
-            if (el) el.value = '兴信车间';
-          } else if (rowText.includes('华登')) {
+          if (rowText.includes('华登')) {
             const el = document.getElementById(`${prefix === 'inj' ? 'inj' : prefix}-workshop`);
             if (el) el.value = '华登车间';
           }
