@@ -661,7 +661,7 @@ function addInjRow(it={}, isSubRow=false) {
     <td>${matSel(it.material||'')}</td>
     <td>${inp('text','color',it.color,'style="width:70px"')}</td>
     <td>${inp('text','pigment_no',it.pigment_no||it.color_code,'style="width:70px"')}</td>
-    <td>${inp('number','quantity',it.quantity,'style="width:60px"')}</td>
+    <td>${inp('text','quantity',it.quantity,'style="width:60px"')}</td>
     <td>${inp('number','shoot_qty',it.shoot_qty||it.color_weight_g,'style="width:65px"')}</td>
     <td>${inp('number','gross_weight_g',it.gross_weight_g||it.total_weight_kg,'style="width:70px"')}</td>
     <td>${inp('number','required_material_kg',it.required_material_kg,'style="width:70px"')}</td>
@@ -685,7 +685,7 @@ function addInjSubRow(btn) {
     <td>${matSel(g('material'))}</td>
     <td>${inp('text','color',g('color'),'style="width:70px"')}</td>
     <td>${inp('text','pigment_no',g('pigment_no'),'style="width:70px"')}</td>
-    <td>${inp('number','quantity',g('quantity'),'style="width:60px"')}</td>
+    <td>${inp('text','quantity',g('quantity'),'style="width:60px"')}</td>
     <td>${inp('number','shoot_qty',g('shoot_qty'),'style="width:65px"')}</td>
     <td>${inp('number','gross_weight_g',g('gross_weight_g'),'style="width:70px"')}</td>
     <td>${inp('number','required_material_kg',g('required_material_kg'),'style="width:70px"')}</td>
