@@ -361,11 +361,23 @@ function viewOrder(id) {
               oninput="autoCalcAmt(this)"></td>
           <td><input type="number" class="form-control form-control-sm bg-light" name="actual_amount_hkd"
               value="${it.actual_amount_hkd||''}" step="0.01" style="width:85px" placeholder="自动计算"
-              title="= 实际用料 × 单价，也可手动修改"></td>
+              title="= 实际用料 × 单价，也可手动修改" oninput="recalcTotals()"></td>
           <td><input type="number" class="form-control form-control-sm" name="injection_cost"
-              value="${it.injection_cost||''}" step="0.01" style="width:85px" placeholder="0.00"></td>
+              value="${it.injection_cost||''}" step="0.01" style="width:85px" placeholder="0.00" oninput="recalcTotals()"></td>
         </tr>`;
       }).join('');
+
+      // 计算合计
+      let totalAmt = 0, totalCost = 0;
+      items.forEach(it => {
+        totalAmt  += parseFloat(it.actual_amount_hkd) || 0;
+        totalCost += parseFloat(it.injection_cost)     || 0;
+      });
+      const totalRow = `<tr style="font-weight:700;background:#f0f7f0">
+        <td colspan="16" class="text-end">合计</td>
+        <td class="text-end" style="color:#1a6e3a" id="sumAmt">${totalAmt ? totalAmt.toFixed(2) : '0.00'}</td>
+        <td class="text-end" style="color:#1a6e3a" id="sumCost">${totalCost ? totalCost.toFixed(2) : '0.00'}</td>
+      </tr>`;
 
       document.getElementById('detailBody').innerHTML = `
         <div class="row g-2 mb-3 p-2 rounded" style="background:#fff3e0">
@@ -396,6 +408,7 @@ function viewOrder(id) {
               </tr>
             </thead>
             <tbody id="machineItemsBody">${rows}</tbody>
+            <tfoot>${totalRow}</tfoot>
           </table>
         </div>`;
 
@@ -422,6 +435,19 @@ function autoCalcAmt(input) {
   if (amtInput && unitPrice > 0) {
     amtInput.value = kg > 0 ? (kg * unitPrice).toFixed(2) : '';
   }
+  recalcTotals();
+}
+
+function recalcTotals() {
+  let totalAmt = 0, totalCost = 0;
+  document.querySelectorAll('#machineItemsBody tr[data-item-id]').forEach(tr => {
+    totalAmt  += parseFloat(tr.querySelector('[name="actual_amount_hkd"]')?.value) || 0;
+    totalCost += parseFloat(tr.querySelector('[name="injection_cost"]')?.value)    || 0;
+  });
+  const sumAmt = document.getElementById('sumAmt');
+  const sumCost = document.getElementById('sumCost');
+  if (sumAmt)  sumAmt.textContent  = totalAmt.toFixed(2);
+  if (sumCost) sumCost.textContent = totalCost.toFixed(2);
 }
 
 function saveMachineData(orderId) {
