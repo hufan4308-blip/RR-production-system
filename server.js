@@ -114,6 +114,15 @@ function updateStatus(type, id, status) {
 
 // ─── Middleware ──────────────────────────────────────────────────────────────
 app.use(express.json({ limit: '10mb' }));
+// 禁用 HTML 缓存，确保每次都获取最新版本
+app.use((req, res, next) => {
+  if (req.path.endsWith('.html') || req.path === '/') {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+  }
+  next();
+});
 app.use(express.static(path.join(__dirname, 'public')));
 
 // ─── 路由工厂 ─────────────────────────────────────────────────────────────────
