@@ -114,7 +114,7 @@
           </div>
           <div class="col-md-3"><label class="form-label fw-bold">车间</label>
             <select class="form-select" id="inj-workshop">
-              <option>A车间</option><option>B车间</option><option>华登车间</option>
+              <option>A车间</option><option>B车间</option><option>华登车间</option><option>兴信车间</option>
             </select>
           </div>
           <div class="col-md-3"><label class="form-label fw-bold">主管</label>
@@ -1248,6 +1248,40 @@ function onExcelFileSelected() {
         return;
       }
 
+      // ── 从表头上方提取订单信息（产品编号、订单编号、日期、原因等）──
+      if (_excelImportType === 'injection' || _excelImportType === 'slush') {
+        const prefix = _excelImportType === 'injection' ? 'inj' : 'slush';
+        for (let i = 0; i < headerRowIdx; i++) {
+          const rowText = allRows[i].map(c => String(c)).join(' ');
+          // 产品编号
+          const pMatch = rowText.match(/产品编号[：:]\s*([^\s]+)/);
+          if (pMatch) {
+            const el = document.getElementById(`${prefix}-order_number`);
+            if (el && !el.value) el.value = pMatch[1].trim();
+          }
+          // 订单编号
+          const dMatch = rowText.match(/订单编号[：:]\s*([^\s]+(?:\s?\d+)?)/);
+          if (dMatch) {
+            const el = document.getElementById(`${prefix}-doc_number`) || document.getElementById(`inj-doc_number`);
+            if (el && !el.value) el.value = dMatch[1].replace(/\s+/g, '').trim();
+          }
+          // 原因
+          const rMatch = rowText.match(/原因\s*[：:]\s*(.+)/);
+          if (rMatch) {
+            const el = document.getElementById(`${prefix}-reason`);
+            if (el && !el.value) el.value = rMatch[1].trim();
+          }
+          // 车间识别（从公司名）
+          if (rowText.includes('兴信')) {
+            const el = document.getElementById(`${prefix === 'inj' ? 'inj' : prefix}-workshop`);
+            if (el) el.value = '兴信车间';
+          } else if (rowText.includes('华登')) {
+            const el = document.getElementById(`${prefix === 'inj' ? 'inj' : prefix}-workshop`);
+            if (el) el.value = '华登车间';
+          }
+        }
+      }
+
       const headers = allRows[headerRowIdx].map(c => String(c).trim());
       const dataRows = allRows.slice(headerRowIdx + 1);
       const colMap = EXCEL_COL_MAP[_excelImportType] || {};
@@ -1271,8 +1305,8 @@ function onExcelFileSelected() {
       // 注释行识别：工模编号或工模名称以这些关键字开头则跳过
       const SKIP_RE = /^(注[：:。\s]|说明|要求|※|\*|附[：:：]|备注[：:：]|[①②③④⑤]|\d+[.、．]\D)/;
 
-      // 需要去掉中文单位的数值字段
-      const NUMERIC_FIELDS = ['shoot_qty','quantity','gross_weight_g','required_material_kg','unit_weight','sample_qty'];
+      // 需要去掉中文单位的数值字段（quantity 不在此列，因为件数/套数可能含 "/" 如 "28/1"）
+      const NUMERIC_FIELDS = ['shoot_qty','gross_weight_g','required_material_kg','unit_weight','sample_qty'];
 
       // 解析数据行
       const items = dataRows.map(row => {
@@ -1296,8 +1330,12 @@ function onExcelFileSelected() {
         const moldId   = (obj.mold_id   || '').trim();
         const moldName = (obj.mold_name || '').trim();
         const productId = (obj.product_id || '').trim();
-        // 搪胶/喷油单可以用产品编号作为有效行标识
-        const hasKey = moldId || moldName || productId || (_excelImportType === 'spray' && obj.client_name);
+        const material = (obj.material || '').trim();
+        const color = (obj.color || obj.color_code || '').trim();
+        // 啤办单：有原料或颜色的行也算有效（同模不同原料的子件行）
+        const hasKey = moldId || moldName || productId
+          || (_excelImportType === 'injection' && (material || color))
+          || (_excelImportType === 'spray' && obj.client_name);
         if (!hasKey) return false;
         // 跳过注释行（工模编号/名称以注释关键词开头）
         if (SKIP_RE.test(moldId) || SKIP_RE.test(moldName)) return false;
