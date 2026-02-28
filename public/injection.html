@@ -355,7 +355,7 @@ function viewOrder(id) {
           <td><input class="form-control form-control-sm" name="receipt_no"
               value="${it.receipt_no||''}" placeholder="领料单号" style="min-width:80px"></td>
           <td><input type="number" class="form-control form-control-sm" name="collected_weight_kg"
-              value="${it.collected_weight_kg||''}" step="0.01" style="width:75px" placeholder="0.00"></td>
+              value="${it.collected_weight_kg || it.required_material_kg || ''}" step="0.01" style="width:75px" placeholder="0.00"></td>
           <td><input type="number" class="form-control form-control-sm" name="actual_weight_kg"
               value="${it.actual_weight_kg||''}" step="0.01" style="width:75px" placeholder="0.00"
               oninput="autoCalcAmt(this)"></td>
