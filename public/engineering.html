@@ -629,45 +629,68 @@ function inp(type, name, val='', extra='') {
 function sel(name, opts, val='') {
   return `<select class="form-select form-select-sm" name="${name}">${opts.map(o => `<option${o===val?' selected':''}>${o}</option>`).join('')}</select>`;
 }
+// ── 全局原料下拉框（挂在body上，不被任何容器裁剪）──
+const _matDropEl = document.createElement('div');
+_matDropEl.id = 'globalMatDrop';
+_matDropEl.style.cssText = 'display:none;position:fixed;z-index:9999;background:#fff;border:1px solid #bbb;border-radius:6px;max-height:340px;overflow-y:auto;width:280px;box-shadow:0 6px 20px rgba(0,0,0,.25);font-size:.85rem;padding:4px 0';
+document.body.appendChild(_matDropEl);
+let _matDropInp = null;
+
 function matSel(val) {
   const v = (val||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;');
-  const uid = 'mat_' + Math.random().toString(36).slice(2,8);
-  return `<div class="position-relative mat-sel-wrap" style="min-width:130px">
+  return `<div class="mat-sel-wrap" style="min-width:130px">
     <input type="text" class="form-control form-control-sm" name="material"
       value="${v}" placeholder="搜索原料..." autocomplete="off"
-      id="${uid}" onfocus="matDropShow(this)" oninput="matDropFilter(this)">
-    <div class="mat-dropdown" style="display:none;position:absolute;z-index:1050;background:#fff;border:1px solid #ccc;border-radius:4px;max-height:320px;overflow-y:auto;width:260px;box-shadow:0 4px 12px rgba(0,0,0,.15);font-size:.82rem;bottom:100%;margin-bottom:2px"></div>
+      onfocus="matDropShow(this)" oninput="matDropFilter(this)">
   </div>`;
 }
 function matDropShow(inp) {
-  const dd = inp.parentElement.querySelector('.mat-dropdown');
-  if (!dd || _matPrices.length === 0) return;
+  if (_matPrices.length === 0) return;
+  _matDropInp = inp;
   matDropFilter(inp);
-  dd.style.display = '';
-  // 点击其他地方关闭
+  _matDropPos(inp);
+  _matDropEl.style.display = '';
   setTimeout(() => {
-    const close = e => { if (!inp.parentElement.contains(e.target)) { dd.style.display = 'none'; document.removeEventListener('mousedown', close); } };
+    const close = e => {
+      if (_matDropEl.contains(e.target) || e.target === inp) return;
+      _matDropEl.style.display = 'none';
+      _matDropInp = null;
+      document.removeEventListener('mousedown', close);
+    };
     document.addEventListener('mousedown', close);
   }, 0);
 }
+function _matDropPos(inp) {
+  const r = inp.getBoundingClientRect();
+  const spaceBelow = window.innerHeight - r.bottom;
+  const spaceAbove = r.top;
+  // 优先向下，空间不够则向上
+  if (spaceBelow >= 200) {
+    _matDropEl.style.top = r.bottom + 2 + 'px';
+    _matDropEl.style.bottom = '';
+  } else {
+    _matDropEl.style.bottom = (window.innerHeight - r.top + 2) + 'px';
+    _matDropEl.style.top = '';
+  }
+  _matDropEl.style.left = Math.max(4, Math.min(r.left, window.innerWidth - 290)) + 'px';
+}
 function matDropFilter(inp) {
-  const dd = inp.parentElement.querySelector('.mat-dropdown');
-  if (!dd) return;
+  _matDropInp = inp;
   const q = inp.value.trim().toLowerCase();
   const matches = q ? _matPrices.filter(p => p.material.toLowerCase().includes(q)) : _matPrices;
-  dd.innerHTML = matches.slice(0, 50).map(p =>
-    `<div class="mat-drop-item" style="padding:4px 8px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"
+  _matDropEl.innerHTML = matches.slice(0, 80).map(p =>
+    `<div style="padding:5px 10px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"
       onmousedown="matDropPick(this,'${p.material.replace(/'/g,"\\'")}')"
-      onmouseover="this.style.background='#e9ecef'" onmouseout="this.style.background=''"
+      onmouseover="this.style.background='#e2e6ea'" onmouseout="this.style.background=''"
       title="${p.material}">${p.material}${p.unit_price ? ' <small style=color:#888>(' + p.unit_price + ' HKD/KG)</small>' : ''}</div>`
-  ).join('') + (matches.length > 50 ? '<div style="padding:4px 8px;color:#888;font-size:.78rem">还有 ' + (matches.length-50) + ' 条，请输入更多关键字筛选...</div>' : '');
-  dd.style.display = '';
+  ).join('') + (matches.length > 80 ? '<div style="padding:5px 10px;color:#999;font-size:.78rem">还有 ' + (matches.length-80) + ' 条，输入更多关键字筛选...</div>' : '');
+  _matDropPos(inp);
+  _matDropEl.style.display = '';
 }
 function matDropPick(el, val) {
-  const inp = el.closest('.mat-sel-wrap').querySelector('input[name="material"]');
-  inp.value = val;
-  inp.title = val;
-  el.closest('.mat-dropdown').style.display = 'none';
+  if (_matDropInp) { _matDropInp.value = val; _matDropInp.title = val; }
+  _matDropEl.style.display = 'none';
+  _matDropInp = null;
 }
 function delBtn() {
   return `<div class="d-flex flex-column align-items-center gap-1">
