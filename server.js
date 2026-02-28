@@ -109,7 +109,14 @@ function deleteOrder(type, id) {
 function updateStatus(type, id, status) {
   const data = loadData();
   const order = data[`${type}_orders`].find(o => o.id === +id);
-  if (order) { order.status = status; order.updated_at = new Date().toISOString(); saveData(data); }
+  if (order) {
+    order.status = status;
+    order.updated_at = new Date().toISOString();
+    if (status === '已完成') {
+      order.completed_date = new Date().toLocaleDateString('zh-CN', { timeZone: 'Asia/Shanghai' }).replace(/\//g, '-');
+    }
+    saveData(data);
+  }
 }
 
 // ─── Middleware ──────────────────────────────────────────────────────────────

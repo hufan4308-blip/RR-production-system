@@ -295,6 +295,7 @@ function renderOrders(orders) {
       <td>${o.supervisor || '-'}</td>
       <td>${o.eng_name || '-'}</td>
       <td style="color:#d63384;font-weight:500">${o.completion_time_display || '-'}</td>
+      <td style="color:#28a745;font-weight:500">${o.completed_date || '-'}</td>
       <td>${o.reason || '-'}</td>
       <td>
         ${statusBadge(o.status)}
@@ -316,7 +317,7 @@ function renderOrders(orders) {
   document.getElementById('orderList').innerHTML = `
     <table class="table table-hover table-sm mb-0">
       <thead class="table-dark">
-        <tr><th>订单编号</th><th>日期</th><th>类型</th><th>车间</th><th>主管</th><th>跟进工程师</th><th style="color:#f9a8d4">要求完成时间</th><th>原因</th><th>状态</th><th>处理</th></tr>
+        <tr><th>订单编号</th><th>日期</th><th>类型</th><th>车间</th><th>主管</th><th>跟进工程师</th><th style="color:#f9a8d4">要求完成时间</th><th style="color:#90ee90">啤机完成日期</th><th>原因</th><th>状态</th><th>处理</th></tr>
       </thead>
       <tbody>${rows}</tbody>
     </table>`;
