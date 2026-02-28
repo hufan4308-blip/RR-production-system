@@ -75,6 +75,14 @@
           <button class="btn btn-sm btn-outline-warning" onclick="document.getElementById('matMonth').value='';loadStats()" title="显示全部月份">
             全部
           </button>
+          <select id="matWorkshop" class="form-select form-select-sm" style="width:auto" onchange="loadStats()">
+            <option value="">全部车间</option>
+            <option value="A车间">A车间</option>
+            <option value="B车间">B车间</option>
+            <option value="华登车间">华登车间</option>
+            <option value="湖南车间">湖南车间</option>
+            <option value="外厂">外厂</option>
+          </select>
           <div class="input-group input-group-sm" style="width:200px">
             <span class="input-group-text"><i class="bi bi-search"></i></span>
             <input type="text" class="form-control" id="matOrderSearch"
@@ -136,6 +144,14 @@
           <button class="btn btn-sm btn-outline-warning" onclick="document.getElementById('costMonth').value='';loadCostData()" title="显示全部月份">
             全部
           </button>
+          <select id="costWorkshop" class="form-select form-select-sm" style="width:auto" onchange="renderCostData()">
+            <option value="">全部车间</option>
+            <option value="A车间">A车间</option>
+            <option value="B车间">B车间</option>
+            <option value="华登车间">华登车间</option>
+            <option value="湖南车间">湖南车间</option>
+            <option value="外厂">外厂</option>
+          </select>
           <div class="input-group input-group-sm" style="width:220px">
             <span class="input-group-text"><i class="bi bi-search"></i></span>
             <input type="text" class="form-control" id="costSearch"
@@ -547,9 +563,11 @@ let statsData = [];
 function loadStats() {
   const month = document.getElementById('matMonth')?.value || '';
   const orderQ = document.getElementById('matOrderSearch')?.value.trim() || '';
+  const workshop = document.getElementById('matWorkshop')?.value || '';
   const params = new URLSearchParams();
   if (month) params.set('month', month);
   if (orderQ) params.set('order_number', orderQ);
+  if (workshop) params.set('workshop', workshop);
   const statsUrl = '/api/material-stats' + (params.toString() ? '?' + params : '');
   Promise.all([
     fetch(statsUrl).then(r => r.json()),
@@ -583,7 +601,10 @@ function loadCostData() {
 
 function renderCostData() {
   const q = (document.getElementById('costSearch')?.value || '').trim().toLowerCase();
-  const filtered = q ? costData.filter(it => ((it.order_number || '') + (it.doc_number || '')).toLowerCase().includes(q)) : costData;
+  const ws = document.getElementById('costWorkshop')?.value || '';
+  let filtered = costData;
+  if (ws) filtered = filtered.filter(it => it.workshop === ws);
+  if (q) filtered = filtered.filter(it => ((it.order_number || '') + (it.doc_number || '')).toLowerCase().includes(q));
 
   if (!filtered.length) {
     document.getElementById('costBody').innerHTML = `<tr><td colspan="9" class="text-center text-muted p-3">${q ? '没有匹配的订单' : '暂无数据'}</td></tr>`;

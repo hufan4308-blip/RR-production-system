@@ -234,16 +234,18 @@ app.get('/api/material-stats', (req, res) => {
     };
   });
 
-  // 如有月份或订单编号过滤，先找出匹配的订单 ID 集合
+  // 如有月份、订单编号或车间过滤，先找出匹配的订单 ID 集合
   const orderSearch = req.query.order_number; // optional order number search
+  const workshop = req.query.workshop; // optional workshop filter
   let validOrderIds = null;
-  if (month || orderSearch) {
+  if (month || orderSearch || workshop) {
     const q = (orderSearch || '').toLowerCase();
     validOrderIds = new Set(
       (data.injection_orders || [])
         .filter(o => {
           if (month && !(o.date || '').startsWith(month)) return false;
           if (q && !((o.order_number || '') + (o.doc_number || '')).toLowerCase().includes(q)) return false;
+          if (workshop && o.workshop !== workshop) return false;
           return true;
         })
         .map(o => o.id)
