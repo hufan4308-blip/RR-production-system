@@ -24,7 +24,7 @@ function loadData() {
   if (!fs.existsSync(DATA_FILE)) return initData();
   try {
     const data = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
-    if (!data.material_prices)       data.material_prices = DEFAULT_MATERIAL_PRICES.slice();
+    if (!data.material_prices || data.material_prices.length === 0) data.material_prices = DEFAULT_MATERIAL_PRICES.slice();
     if (!data.material_requisitions) data.material_requisitions = [];
     return data;
   }
