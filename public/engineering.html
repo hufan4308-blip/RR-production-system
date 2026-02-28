@@ -630,18 +630,44 @@ function sel(name, opts, val='') {
   return `<select class="form-select form-select-sm" name="${name}">${opts.map(o => `<option${o===val?' selected':''}>${o}</option>`).join('')}</select>`;
 }
 function matSel(val) {
-  // Keep datalist in sync with _matPrices
-  const dl = document.getElementById('injMatDatalist');
-  if (dl && _matPrices.length > 0 && dl.children.length === 0) {
-    dl.innerHTML = _matPrices.map(p => {
-      const e = p.material.replace(/&/g,'&amp;').replace(/"/g,'&quot;');
-      return `<option value="${e}">`;
-    }).join('');
-  }
   const v = (val||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;');
-  return `<input type="text" class="form-control form-control-sm" name="material"
-    value="${v}" list="injMatDatalist" placeholder="搜索原料..." autocomplete="off"
-    style="min-width:130px">`;
+  const uid = 'mat_' + Math.random().toString(36).slice(2,8);
+  return `<div class="position-relative mat-sel-wrap" style="min-width:130px">
+    <input type="text" class="form-control form-control-sm" name="material"
+      value="${v}" placeholder="搜索原料..." autocomplete="off"
+      id="${uid}" onfocus="matDropShow(this)" oninput="matDropFilter(this)">
+    <div class="mat-dropdown" style="display:none;position:absolute;z-index:1050;background:#fff;border:1px solid #ccc;border-radius:4px;max-height:200px;overflow-y:auto;width:100%;box-shadow:0 4px 12px rgba(0,0,0,.15);font-size:.82rem"></div>
+  </div>`;
+}
+function matDropShow(inp) {
+  const dd = inp.parentElement.querySelector('.mat-dropdown');
+  if (!dd || _matPrices.length === 0) return;
+  matDropFilter(inp);
+  dd.style.display = '';
+  // 点击其他地方关闭
+  setTimeout(() => {
+    const close = e => { if (!inp.parentElement.contains(e.target)) { dd.style.display = 'none'; document.removeEventListener('mousedown', close); } };
+    document.addEventListener('mousedown', close);
+  }, 0);
+}
+function matDropFilter(inp) {
+  const dd = inp.parentElement.querySelector('.mat-dropdown');
+  if (!dd) return;
+  const q = inp.value.trim().toLowerCase();
+  const matches = q ? _matPrices.filter(p => p.material.toLowerCase().includes(q)) : _matPrices;
+  dd.innerHTML = matches.slice(0, 50).map(p =>
+    `<div class="mat-drop-item" style="padding:4px 8px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"
+      onmousedown="matDropPick(this,'${p.material.replace(/'/g,"\\'")}')"
+      onmouseover="this.style.background='#e9ecef'" onmouseout="this.style.background=''"
+      title="${p.material}">${p.material}${p.unit_price ? ' <small style=color:#888>(' + p.unit_price + ' HKD/KG)</small>' : ''}</div>`
+  ).join('') + (matches.length > 50 ? '<div style="padding:4px 8px;color:#888;font-size:.78rem">还有 ' + (matches.length-50) + ' 条，请输入更多关键字筛选...</div>' : '');
+  dd.style.display = '';
+}
+function matDropPick(el, val) {
+  const inp = el.closest('.mat-sel-wrap').querySelector('input[name="material"]');
+  inp.value = val;
+  inp.title = val;
+  el.closest('.mat-dropdown').style.display = 'none';
 }
 function delBtn() {
   return `<div class="d-flex flex-column align-items-center gap-1">
@@ -1420,18 +1446,10 @@ document.addEventListener('mouseup', e => {
 
 // ─── 初始化 ───────────────────────────────────────────────────────────────────
 let _matPrices = [];
-fetch('/api/material-prices').then(r => r.json()).then(p => {
-  _matPrices = p;
-  const dl = document.getElementById('injMatDatalist');
-  if (dl) dl.innerHTML = p.map(m => {
-    const e = m.material.replace(/&/g,'&amp;').replace(/"/g,'&quot;');
-    return `<option value="${e}">`;
-  }).join('');
-});
+fetch('/api/material-prices').then(r => r.json()).then(p => { _matPrices = p; });
 
 loadOrders();
 setInterval(() => { loadOrders(); checkForNewCompletions(); }, 30000);
 </script>
-<datalist id="injMatDatalist"></datalist>
 </body>
 </html>
