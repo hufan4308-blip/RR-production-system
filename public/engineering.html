@@ -1019,30 +1019,33 @@ async function submitReview(action) {
   }
   document.getElementById('reviewPinError').classList.add('d-none');
 
-  // 先尝试经理身份验证，再尝试主管身份验证
-  const mgrNames = ['易东存'];
   let isManager = false;
   let reviewerName = '';
   let reviewerRole = '';
 
-  for (const name of mgrNames) {
-    const r = await fetch('/api/verify-pin', {
+  try {
+    // 先尝试经理身份验证
+    const mgrR = await fetch('/api/verify-pin', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, pin: enteredPin, role: 'manager' })
+      body: JSON.stringify({ name: '易东存', pin: enteredPin, role: 'manager' })
     });
-    const d = await r.json();
-    if (d.success) { isManager = true; reviewerName = name; reviewerRole = 'manager'; break; }
-  }
+    const mgrD = await mgrR.json();
+    if (mgrD.success) { isManager = true; reviewerName = '易东存'; reviewerRole = 'manager'; }
 
-  if (!isManager && reviewingOrderSupervisor) {
-    const r = await fetch('/api/verify-pin', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: reviewingOrderSupervisor, pin: enteredPin, role: 'supervisor' })
-    });
-    const d = await r.json();
-    if (d.success) { reviewerName = reviewingOrderSupervisor; reviewerRole = 'supervisor'; }
+    // 再尝试主管身份验证
+    if (!isManager && reviewingOrderSupervisor) {
+      const supR = await fetch('/api/verify-pin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: reviewingOrderSupervisor, pin: enteredPin, role: 'supervisor' })
+      });
+      const supD = await supR.json();
+      if (supD.success) { reviewerName = reviewingOrderSupervisor; reviewerRole = 'supervisor'; }
+    }
+  } catch (e) {
+    showToast('无法连接服务器验证PIN', 'danger');
+    return;
   }
 
   if (!reviewerName) {
@@ -1067,11 +1070,13 @@ async function submitReview(action) {
     if (action === 'reject') {
       const order = await (await fetch(`/api/${currentTab}/${reviewingOrderId}`)).json();
       const { items, ...header } = order;
-      await fetch(`/api/${currentTab}/${reviewingOrderId}`, {
+      const rr = await fetch(`/api/${currentTab}/${reviewingOrderId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...header, status: newStatus, reason: rejectReason, items })
       });
+      const rd = await rr.json();
+      if (rd.error) { showToast(rd.error, 'danger'); return; }
     } else {
       const resp = await fetch(`/api/${currentTab}/${reviewingOrderId}/status`, {
         method: 'PATCH',
@@ -1085,7 +1090,7 @@ async function submitReview(action) {
     showToast(toastMsg, action === 'approve' ? 'success' : 'danger');
     loadOrders();
   } catch (e) {
-    showToast('操作失败', 'danger');
+    showToast('操作失败：' + e.message, 'danger');
   }
 }
 
