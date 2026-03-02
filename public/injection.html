@@ -111,15 +111,9 @@
               <i class="bi bi-x-lg"></i>
             </button>
           </div>
-          <div class="input-group input-group-sm" style="width:160px">
-            <span class="input-group-text"><i class="bi bi-person"></i></span>
-            <input type="text" class="form-control" id="matClientSearch"
-              placeholder="搜索客名..." autocomplete="off">
-            <button class="btn btn-outline-secondary"
-              onclick="document.getElementById('matClientSearch').value='';loadStats()" title="清除">
-              <i class="bi bi-x-lg"></i>
-            </button>
-          </div>
+          <select id="matClientFilter" class="form-select form-select-sm" style="width:auto" onchange="loadStats()">
+            <option value="">全部客户</option>
+          </select>
           <div class="input-group input-group-sm" style="width:180px">
             <span class="input-group-text"><i class="bi bi-search"></i></span>
             <input type="text" class="form-control" id="matSearch"
@@ -198,15 +192,9 @@
               <i class="bi bi-x-lg"></i>
             </button>
           </div>
-          <div class="input-group input-group-sm" style="width:160px">
-            <span class="input-group-text"><i class="bi bi-person"></i></span>
-            <input type="text" class="form-control" id="costClientSearch"
-              placeholder="搜索客名..." oninput="renderCostData()" autocomplete="off">
-            <button class="btn btn-outline-secondary"
-              onclick="document.getElementById('costClientSearch').value='';renderCostData()" title="清除">
-              <i class="bi bi-x-lg"></i>
-            </button>
-          </div>
+          <select id="costClientFilter" class="form-select form-select-sm" style="width:auto" onchange="renderCostData()">
+            <option value="">全部客户</option>
+          </select>
           <button class="btn btn-sm btn-outline-secondary" onclick="loadCostData()">
             <i class="bi bi-arrow-clockwise me-1"></i>刷新数据
           </button>
@@ -639,7 +627,14 @@ setInterval(loadOrders, 30000);
 // 搜索框：按回车触发查询
 document.getElementById('matOrderSearch')?.addEventListener('keydown', e => { if (e.key === 'Enter') loadStats(); });
 document.getElementById('matProductSearch')?.addEventListener('keydown', e => { if (e.key === 'Enter') loadStats(); });
-document.getElementById('matClientSearch')?.addEventListener('keydown', e => { if (e.key === 'Enter') loadStats(); });
+
+// 加载客户列表到下拉框
+fetch('/api/clients').then(r => r.json()).then(clients => {
+  ['matClientFilter', 'costClientFilter'].forEach(id => {
+    const sel = document.getElementById(id);
+    if (sel) clients.forEach(c => { const o = document.createElement('option'); o.value = c; o.textContent = c; sel.appendChild(o); });
+  });
+});
 
 // ── 标签页切换 ──────────────────────────────────────────────────────────────
 function switchInjTab(name, el) {
@@ -660,7 +655,7 @@ function loadStats() {
   const orderQ = document.getElementById('matOrderSearch')?.value.trim() || '';
   const workshop = document.getElementById('matWorkshop')?.value || '';
   const productQ = document.getElementById('matProductSearch')?.value.trim() || '';
-  const clientQ = document.getElementById('matClientSearch')?.value.trim() || '';
+  const clientQ = document.getElementById('matClientFilter')?.value || '';
   const params = new URLSearchParams();
   if (month) params.set('month', month);
   if (orderQ) params.set('order_number', orderQ);
@@ -702,12 +697,12 @@ function renderCostData() {
   const q = (document.getElementById('costSearch')?.value || '').trim().toLowerCase();
   const ws = document.getElementById('costWorkshop')?.value || '';
   const pq = (document.getElementById('costProductSearch')?.value || '').trim().toLowerCase();
-  const cq = (document.getElementById('costClientSearch')?.value || '').trim().toLowerCase();
+  const cq = document.getElementById('costClientFilter')?.value || '';
   let filtered = costData;
   if (ws) filtered = filtered.filter(it => it.workshop === ws);
   if (q) filtered = filtered.filter(it => ((it.order_number || '') + (it.doc_number || '')).toLowerCase().includes(q));
   if (pq) filtered = filtered.filter(it => (it.doc_number || '').toLowerCase().includes(pq));
-  if (cq) filtered = filtered.filter(it => (it.client_name || '').toLowerCase().includes(cq));
+  if (cq) filtered = filtered.filter(it => (it.client_name || '') === cq);
 
   const hasFilter = q || pq || cq || ws;
   if (!filtered.length) {

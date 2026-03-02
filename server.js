@@ -278,6 +278,21 @@ app.patch('/api/problems/:id/resolve', (req, res) => {
   res.json(p);
 });
 
+// ─── 客户列表管理 ──────────────────────────────────────────────────────────────
+app.get('/api/clients', (req, res) => {
+  const data = loadData();
+  res.json(data.clients || []);
+});
+
+app.put('/api/clients', (req, res) => {
+  try {
+    const data = loadData();
+    data.clients = req.body;
+    saveData(data);
+    res.json(data.clients);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 // ─── 原料价格管理 ──────────────────────────────────────────────────────────────
 app.get('/api/material-prices', (req, res) => {
   const data = loadData();
