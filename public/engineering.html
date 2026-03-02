@@ -1269,9 +1269,10 @@ const EXCEL_COL_MAP = {
   injection: {
     '工模编号':'mold_id','模具编号':'mold_id','moldid':'mold_id',
     '工模名称':'mold_name','模具名称':'mold_name',
-    '原料':'material','材料':'material',
-    '颜色':'color',
-    '色粉编号':'pigment_no','色粉':'pigment_no',
+    '原料':'material','材料':'material','用料名称':'material',
+    '颜色':'color','顔色':'color',
+    '色粉编号':'pigment_no','色粉号':'pigment_no','色粉':'pigment_no',
+    '啤机机型':'machine_type','机型':'machine_type',
     '件数':'quantity','套数':'quantity','件数/套数':'quantity','件数套数':'quantity',
     '数量(啤)':'shoot_qty','数量（啤）':'shoot_qty','啤数':'shoot_qty','数量':'shoot_qty',
     '整啤毛重(g)':'gross_weight_g','整啤毛重（g）':'gross_weight_g',
@@ -1365,6 +1366,27 @@ function onExcelFileSelected() {
             const el = document.getElementById(`${prefix}-doc_number`) || document.getElementById(`inj-doc_number`);
             if (el && !el.value) el.value = dMatch[1].replace(/\s+/g, '').trim();
           }
+          // 客户名称
+          const cMatch = rowText.match(/客户名称[：:]\s*(\S+)/);
+          if (cMatch) {
+            const el = document.getElementById(`${prefix}-client_name`);
+            if (el && !el.value) el.value = cMatch[1].trim();
+          }
+          // 产品名称
+          const pnMatch = rowText.match(/产品名称[：:]\s*(\S+)/);
+          if (pnMatch) {
+            const el = document.getElementById(`${prefix}-product_name`);
+            if (el && !el.value) el.value = pnMatch[1].trim();
+          }
+          // 日期
+          const dtMatch = rowText.match(/日期[：:]\s*([\d/.-]+)/);
+          if (dtMatch) {
+            const el = document.getElementById(`${prefix}-date`);
+            if (el && !el.value) {
+              const parts = dtMatch[1].split(/[/.-]/);
+              if (parts.length >= 3) el.value = `${parts[0]}-${parts[1].padStart(2,'0')}-${parts[2].padStart(2,'0')}`;
+            }
+          }
           // 原因
           const rMatch = rowText.match(/原因\s*[：:]\s*(.+)/);
           if (rMatch) {
@@ -1383,15 +1405,38 @@ function onExcelFileSelected() {
       const dataRows = allRows.slice(headerRowIdx + 1);
       const colMap = EXCEL_COL_MAP[_excelImportType] || {};
 
-      // 建立 列索引 → 字段名 映射
+      // ── 排模表预处理：将子行(零件行)的套数合并到模具主行 ──
+      const isPaiMoBiao = _excelImportType === 'injection'
+        && headers.some(h => normCol(h).includes('零件编号'));
+      if (isPaiMoBiao) {
+        const moldCol = headers.findIndex(h => normCol(h) === normCol('工模编号'));
+        const qtyCol  = headers.findIndex(h => normCol(h) === normCol('套数'));
+        if (moldCol >= 0 && qtyCol >= 0) {
+          for (let i = 0; i < dataRows.length; i++) {
+            const row = dataRows[i];
+            if (row[moldCol] && !row[qtyCol]) {
+              // 模具主行无套数 → 从下方子行取
+              for (let j = i + 1; j < dataRows.length; j++) {
+                if (dataRows[j][moldCol]) break;
+                if (dataRows[j][qtyCol]) { row[qtyCol] = dataRows[j][qtyCol]; break; }
+              }
+            }
+          }
+        }
+      }
+
+      // 建立 列索引 → 字段名 映射（优先精确匹配，再取最长子串匹配）
       const idxMap = {};
       headers.forEach((h, i) => {
         if (!h) return;
         const hn = normCol(h);
+        let bestField = null, bestLen = 0, isExact = false;
         Object.keys(colMap).forEach(k => {
           const kn = normCol(k);
-          if (hn === kn || hn.includes(kn)) idxMap[i] = colMap[k];
+          if (hn === kn) { bestField = colMap[k]; isExact = true; }
+          else if (!isExact && hn.includes(kn) && kn.length > bestLen) { bestField = colMap[k]; bestLen = kn.length; }
         });
+        if (bestField) idxMap[i] = bestField;
       });
 
       if (!Object.keys(idxMap).length) {
@@ -1441,6 +1486,11 @@ function onExcelFileSelected() {
         return true;
       });
 
+      // 排模表模式：只保留有原料的模具主行，排除子行和汇总区
+      if (isPaiMoBiao) {
+        items = items.filter(obj => obj.mold_id && obj.material);
+      }
+
       if (!items.length) { showToast('表头下方没有有效数据行', 'warning'); return; }
 
       // 清空现有行，填入导入的行
@@ -1463,7 +1513,9 @@ function onExcelFileSelected() {
           else addSprayRow(it);
         });
       }
-      showToast(`已从第${headerRowIdx+1}行识别表头，成功导入 ${items.length} 行`, 'success');
+      showToast(isPaiMoBiao
+        ? `已识别排模表格式，成功导入 ${items.length} 个模具`
+        : `已从第${headerRowIdx+1}行识别表头，成功导入 ${items.length} 行`, 'success');
     } catch(err) {
       showToast('解析失败：' + err.message, 'danger');
     }
