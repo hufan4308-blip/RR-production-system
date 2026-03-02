@@ -299,6 +299,8 @@ app.get('/api/injection-costs', (req, res) => {
       result.push({
         order_number: o.order_number || '',
         doc_number: o.doc_number || '',
+        product_name: o.product_name || '',
+        client_name: o.client_name || '',
         date: o.date || '',
         workshop: o.workshop || '',
         mold_id: it.mold_id || '',

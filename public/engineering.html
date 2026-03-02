@@ -105,6 +105,8 @@
         <div class="row g-3 mb-3">
           <div class="col-md-3"><label class="form-label fw-bold">产品编号</label><input class="form-control" id="inj-order_number" placeholder="如 HD2024001"></div>
           <div class="col-md-3"><label class="form-label fw-bold">订单编号</label><input class="form-control" id="inj-doc_number" placeholder="订单编号"></div>
+          <div class="col-md-3"><label class="form-label fw-bold">产品名称</label><input class="form-control" id="inj-product_name" placeholder="产品名称"></div>
+          <div class="col-md-3"><label class="form-label fw-bold">客名</label><input class="form-control" id="inj-client_name" placeholder="客户名称"></div>
           <div class="col-md-3"><label class="form-label fw-bold">日期</label><input type="date" class="form-control" id="inj-date"></div>
           <div class="col-md-3"><label class="form-label fw-bold">阶段</label>
             <select class="form-select" id="inj-stage">
@@ -479,6 +481,8 @@ function renderOrderList(orders) {
     <tr class="order-row" style="cursor:pointer" onclick="viewOrderDetail(${o.id},'${(o.order_number||'').replace(/'/g,'')}')">
       <td>${o.id}</td>
       <td><strong>${o.order_number || '-'}</strong></td>
+      <td>${o.product_name || '-'}</td>
+      <td>${o.client_name || '-'}</td>
       <td>${o.date || '-'}</td>
       <td>${o.order_type || '-'}</td>
       <td>${o.workshop || '-'}</td>
@@ -507,7 +511,7 @@ function renderOrderList(orders) {
     <table class="table table-hover table-sm mb-0">
       <thead class="table-dark">
         <tr>
-          <th>ID</th><th>产品编号</th><th>日期</th><th>类型</th><th>车间</th><th>主管</th><th>跟进工程师</th>
+          <th>ID</th><th>产品编号</th><th>产品名称</th><th>客名</th><th>日期</th><th>类型</th><th>车间</th><th>主管</th><th>跟进工程师</th>
           ${isSpray ? `<th style="color:#7eb8ff">收到胶件时间</th><th style="color:#f9a8d4">工程预计完成时间</th>` : ''}
           <th>原因</th><th>状态</th><th>创建时间</th><th>操作</th>
         </tr>
@@ -583,6 +587,10 @@ function editOrder(id, isDuplicate = false) {
       document.getElementById(`${prefix}-order_number`).value = order.order_number || '';
       const docNumElEdit = document.getElementById(`${prefix}-doc_number`);
       if (docNumElEdit) docNumElEdit.value = isDuplicate ? '' : (order.doc_number || '');
+      const prodNameElEdit = document.getElementById(`${prefix}-product_name`);
+      if (prodNameElEdit) prodNameElEdit.value = order.product_name || '';
+      const clientNameElEdit = document.getElementById(`${prefix}-client_name`);
+      if (clientNameElEdit) clientNameElEdit.value = order.client_name || '';
       document.getElementById(`${prefix}-date`).value = new Date().toISOString().slice(0,10);
       document.getElementById(`${prefix}-order_type`).value = order.order_type || '';
       document.getElementById(`${prefix}-status`).value = isDuplicate ? '待审核' : (order.status || '待审核');
@@ -807,9 +815,11 @@ function saveOrder(type) {
   const supElSave = document.getElementById(`${prefix}-supervisor`);
   const stgElSave = document.getElementById(`${prefix}-stage`);
   const body = {
-    order_number: document.getElementById(`${prefix}-order_number`).value,
-    doc_number:   document.getElementById(`${prefix}-doc_number`)?.value || null,
-    date:         document.getElementById(`${prefix}-date`).value,
+    order_number:  document.getElementById(`${prefix}-order_number`).value,
+    doc_number:    document.getElementById(`${prefix}-doc_number`)?.value || null,
+    product_name:  document.getElementById(`${prefix}-product_name`)?.value || null,
+    client_name:   document.getElementById(`${prefix}-client_name`)?.value || null,
+    date:          document.getElementById(`${prefix}-date`).value,
     order_type:   document.getElementById(`${prefix}-order_type`).value,
     stage:        stgElSave ? (stgElSave.value || null) : null,
     status:       document.getElementById(`${prefix}-status`).value,
@@ -966,6 +976,8 @@ function renderReviewDetails(order, type) {
   const headerHtml = `
     <div class="row g-2 mb-3">
       <div class="col-6 col-md-3"><div class="text-muted small">产品编号</div><div class="fw-bold">${order.order_number || '-'}</div></div>
+      <div class="col-6 col-md-3"><div class="text-muted small">产品名称</div><div>${order.product_name || '-'}</div></div>
+      <div class="col-6 col-md-3"><div class="text-muted small">客名</div><div>${order.client_name || '-'}</div></div>
       <div class="col-6 col-md-3"><div class="text-muted small">日期</div><div>${order.date || '-'}</div></div>
       <div class="col-6 col-md-3"><div class="text-muted small">类型</div><div>${order.order_type || '-'}</div></div>
       <div class="col-6 col-md-3"><div class="text-muted small">车间</div><div>${order.workshop || '-'}</div></div>
