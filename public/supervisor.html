@@ -150,42 +150,49 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-// ─── 主管 PIN 配置（管理员可修改） ─────────────────────────────────────────────
-// 修改方法：把对应主管名字后面的引号内数字改为新 PIN 即可
-const SUPERVISOR_PINS = {
-  '段新辉': '6602',
-  '唐海林': '6603',
-  '蒙海欢': '6604',
-  '万志勇': '6605',
-  '章发东': '6606',
-  '刘际维': '6607',
-  '甘勇辉': '6608',
-  '王玉国': '6609',
-};
+// PIN 已移至服务端验证，前端不存储任何 PIN
 
 // ─── 登录逻辑 ─────────────────────────────────────────────────────────────────
 let currentSupervisor = null;
 let supTab    = 'injection';
 let supFilter = '';
 
-function doLogin() {
+async function doLogin() {
   const name = document.getElementById('loginName').value;
   const pin  = document.getElementById('loginPin').value;
-  if (!name || SUPERVISOR_PINS[name] !== pin) {
+  if (!name || !pin) {
     document.getElementById('loginError').classList.remove('d-none');
     document.getElementById('loginPin').value = '';
     document.getElementById('loginPin').focus();
     return;
   }
-  currentSupervisor = name;
-  sessionStorage.setItem('sup_name', name);
-  document.getElementById('loginError').classList.add('d-none');
-  showDashboard();
+  try {
+    const r = await fetch('/api/verify-pin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, pin, role: 'supervisor' })
+    });
+    const d = await r.json();
+    if (!d.success) {
+      document.getElementById('loginError').classList.remove('d-none');
+      document.getElementById('loginPin').value = '';
+      document.getElementById('loginPin').focus();
+      return;
+    }
+    currentSupervisor = name;
+    sessionStorage.setItem('sup_name', name);
+    sessionStorage.setItem('sup_pin', pin);
+    document.getElementById('loginError').classList.add('d-none');
+    showDashboard();
+  } catch (e) {
+    document.getElementById('loginError').classList.remove('d-none');
+  }
 }
 
 function doLogout() {
   currentSupervisor = null;
   sessionStorage.removeItem('sup_name');
+  sessionStorage.removeItem('sup_pin');
   document.getElementById('loginSection').style.display = '';
   document.getElementById('dashSection').style.display = 'none';
   document.getElementById('loginName').value = '';
@@ -364,34 +371,35 @@ function renderSupDetails(order, type) {
   return header + `<div class="table-responsive"><table class="table table-bordered table-sm"><thead class="table-light">${thead}</thead><tbody>${rows}</tbody></table></div>`;
 }
 
-function submitSupReview(action) {
+async function submitSupReview(action) {
   const rejectReason = document.getElementById('supRejectReason').value.trim();
   const newStatus = action === 'approve' ? '待经理审核' : '已驳回';
+  const pin = sessionStorage.getItem('sup_pin') || '';
 
-  const doUpdate = action === 'reject'
-    ? fetch(`/api/${supTab}/${supReviewingId}`)
-        .then(r => r.json())
-        .then(order => {
-          const { items, ...header } = order;
-          return fetch(`/api/${supTab}/${supReviewingId}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ ...header, status: newStatus, reason: rejectReason, items })
-          });
-        })
-    : fetch(`/api/${supTab}/${supReviewingId}/status`, {
+  try {
+    if (action === 'reject') {
+      const order = await (await fetch(`/api/${supTab}/${supReviewingId}`)).json();
+      const { items, ...header } = order;
+      await fetch(`/api/${supTab}/${supReviewingId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...header, status: newStatus, reason: rejectReason, items })
+      });
+    } else {
+      const resp = await fetch(`/api/${supTab}/${supReviewingId}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: newStatus })
+        body: JSON.stringify({ status: newStatus, pin, reviewer_name: currentSupervisor, reviewer_role: 'supervisor' })
       });
-
-  doUpdate
-    .then(() => {
-      bootstrap.Modal.getInstance(document.getElementById('supReviewModal'))?.hide();
-      showToast(action === 'approve' ? '审核通过！已转交经理审核' : '已驳回', action === 'approve' ? 'success' : 'danger');
-      loadSupOrders();
-    })
-    .catch(() => showToast('操作失败', 'danger'));
+      const result = await resp.json();
+      if (result.error) { showToast(result.error, 'danger'); return; }
+    }
+    bootstrap.Modal.getInstance(document.getElementById('supReviewModal'))?.hide();
+    showToast(action === 'approve' ? '审核通过！已转交经理审核' : '已驳回', action === 'approve' ? 'success' : 'danger');
+    loadSupOrders();
+  } catch (e) {
+    showToast('操作失败', 'danger');
+  }
 }
 
 // ─── 工具 ─────────────────────────────────────────────────────────────────────
@@ -405,9 +413,21 @@ function showToast(msg, type = 'success') {
 
 // ─── 自动恢复登录 session ──────────────────────────────────────────────────────
 const savedSup = sessionStorage.getItem('sup_name');
-if (savedSup && SUPERVISOR_PINS[savedSup]) {
-  currentSupervisor = savedSup;
-  showDashboard();
+const savedSupPin = sessionStorage.getItem('sup_pin');
+if (savedSup && savedSupPin) {
+  fetch('/api/verify-pin', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name: savedSup, pin: savedSupPin, role: 'supervisor' })
+  }).then(r => r.json()).then(d => {
+    if (d.success) {
+      currentSupervisor = savedSup;
+      showDashboard();
+    } else {
+      sessionStorage.removeItem('sup_name');
+      sessionStorage.removeItem('sup_pin');
+    }
+  });
 }
 </script>
 </body>

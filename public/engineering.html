@@ -921,12 +921,7 @@ function showToast(msg, type = 'success') {
 }
 
 // ─── 主管审核 ─────────────────────────────────────────────────────────────────
-const SUPERVISOR_PINS = {
-  '段新辉': '6602', '唐海林': '6603',
-  '蒙海欢': '6604', '万志勇': '6605', '章发东': '6606', '刘际维': '6607',
-  '甘勇辉': '6608', '王玉国': '6609'
-};
-const MANAGER_PIN = { '易东存': '6601' };
+// PIN 已移至服务端验证，前端不存储任何 PIN
 
 let reviewingOrderId = null;
 let reviewingOrderSupervisor = null;
@@ -1005,62 +1000,85 @@ function renderReviewDetails(order, type) {
   return headerHtml + `<div class="table-responsive"><table class="table table-bordered table-sm"><thead class="table-light">${thead}</thead><tbody>${rows}</tbody></table></div>`;
 }
 
-function submitReview(action) {
+async function submitReview(action) {
   const enteredPin = document.getElementById('reviewPin').value.trim();
   const rejectReason = document.getElementById('rejectReason').value.trim();
 
-  // 检查是否为经理PIN
-  const isManager = Object.values(MANAGER_PIN).includes(enteredPin);
-  // 检查是否为该单据主管PIN
-  const correctSupPin = reviewingOrderSupervisor ? SUPERVISOR_PINS[reviewingOrderSupervisor] : null;
-  const isSupervisor = correctSupPin && enteredPin === correctSupPin;
-
-  if (!enteredPin || (!isManager && !isSupervisor)) {
+  if (!enteredPin) {
     document.getElementById('reviewPinError').classList.remove('d-none');
     document.getElementById('reviewPin').focus();
     return;
   }
   document.getElementById('reviewPinError').classList.add('d-none');
 
-  let newStatus;
-  let toastMsg;
+  // 先尝试经理身份验证，再尝试主管身份验证
+  const mgrNames = ['易东存'];
+  let isManager = false;
+  let reviewerName = '';
+  let reviewerRole = '';
+
+  for (const name of mgrNames) {
+    const r = await fetch('/api/verify-pin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, pin: enteredPin, role: 'manager' })
+    });
+    const d = await r.json();
+    if (d.success) { isManager = true; reviewerName = name; reviewerRole = 'manager'; break; }
+  }
+
+  if (!isManager && reviewingOrderSupervisor) {
+    const r = await fetch('/api/verify-pin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: reviewingOrderSupervisor, pin: enteredPin, role: 'supervisor' })
+    });
+    const d = await r.json();
+    if (d.success) { reviewerName = reviewingOrderSupervisor; reviewerRole = 'supervisor'; }
+  }
+
+  if (!reviewerName) {
+    document.getElementById('reviewPinError').classList.remove('d-none');
+    document.getElementById('reviewPin').focus();
+    return;
+  }
+
+  let newStatus, toastMsg;
   if (action === 'reject') {
     newStatus = '已驳回';
     toastMsg = '已驳回';
   } else if (isManager) {
-    // 经理审核：直接进入待生产
     newStatus = '待生产';
     toastMsg = '经理审核通过！单据已进入待生产';
   } else {
-    // 主管审核：进入待经理审核
     newStatus = '待经理审核';
     toastMsg = '主管审核通过！已转交经理审核';
   }
 
-  const doUpdate = action === 'reject'
-    ? fetch(`/api/${currentTab}/${reviewingOrderId}`)
-        .then(r => r.json())
-        .then(order => {
-          const { items, ...header } = order;
-          return fetch(`/api/${currentTab}/${reviewingOrderId}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ ...header, status: newStatus, reason: rejectReason, items })
-          });
-        })
-    : fetch(`/api/${currentTab}/${reviewingOrderId}/status`, {
+  try {
+    if (action === 'reject') {
+      const order = await (await fetch(`/api/${currentTab}/${reviewingOrderId}`)).json();
+      const { items, ...header } = order;
+      await fetch(`/api/${currentTab}/${reviewingOrderId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...header, status: newStatus, reason: rejectReason, items })
+      });
+    } else {
+      const resp = await fetch(`/api/${currentTab}/${reviewingOrderId}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: newStatus })
+        body: JSON.stringify({ status: newStatus, pin: enteredPin, reviewer_name: reviewerName, reviewer_role: reviewerRole })
       });
-
-  doUpdate
-    .then(() => {
-      bootstrap.Modal.getInstance(document.getElementById('reviewModal'))?.hide();
-      showToast(toastMsg, action === 'approve' ? 'success' : 'danger');
-      loadOrders();
-    })
-    .catch(() => showToast('操作失败', 'danger'));
+      const result = await resp.json();
+      if (result.error) { showToast(result.error, 'danger'); return; }
+    }
+    bootstrap.Modal.getInstance(document.getElementById('reviewModal'))?.hide();
+    showToast(toastMsg, action === 'approve' ? 'success' : 'danger');
+    loadOrders();
+  } catch (e) {
+    showToast('操作失败', 'danger');
+  }
 }
 
 // ─── 生产总表 ─────────────────────────────────────────────────────────────────

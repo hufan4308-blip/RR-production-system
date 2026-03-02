@@ -2,6 +2,7 @@ const express = require('express');
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
+const crypto = require('crypto');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -119,6 +120,50 @@ function updateStatus(type, id, status) {
   }
 }
 
+// ─── PIN 安全验证 ────────────────────────────────────────────────────────────
+function hashPin(pin) {
+  return crypto.createHash('sha256').update(String(pin)).digest('hex');
+}
+
+// 默认 PIN（仅用于首次初始化迁移）
+const DEFAULT_PINS = {
+  supervisors: {
+    '段新辉': '6602', '唐海林': '6603', '蒙海欢': '6604',
+    '万志勇': '6605', '章发东': '6606', '刘际维': '6607',
+    '甘勇辉': '6608', '王玉国': '6609'
+  },
+  manager: { '易东存': '6601' }
+};
+
+// 服务启动时初始化 PIN 哈希
+(function initPins() {
+  const data = loadData();
+  if (!data.auth_pins) {
+    data.auth_pins = {
+      supervisors: {},
+      manager: {}
+    };
+    for (const [name, pin] of Object.entries(DEFAULT_PINS.supervisors)) {
+      data.auth_pins.supervisors[name] = hashPin(pin);
+    }
+    for (const [name, pin] of Object.entries(DEFAULT_PINS.manager)) {
+      data.auth_pins.manager[name] = hashPin(pin);
+    }
+    saveData(data);
+    console.log('PIN codes migrated to server-side hashed storage');
+  }
+})();
+
+function verifyPin(name, pin, role) {
+  const data = loadData();
+  const pins = data.auth_pins || {};
+  const hash = hashPin(pin);
+  if (role === 'manager') {
+    return pins.manager && pins.manager[name] === hash;
+  }
+  return pins.supervisors && pins.supervisors[name] === hash;
+}
+
 // ─── Middleware ──────────────────────────────────────────────────────────────
 app.use(express.json({ limit: '10mb' }));
 // 禁用 HTML 缓存，确保每次都获取最新版本
@@ -162,7 +207,19 @@ app.use(express.static(path.join(__dirname, 'public')));
   });
 
   app.patch(`/api/${type}/:id/status`, (req, res) => {
-    updateStatus(type, req.params.id, req.body.status);
+    const { status, pin, reviewer_name, reviewer_role } = req.body;
+    // 审核操作需要 PIN 验证（主管审核 / 经理审核 / 驳回）
+    const reviewStatuses = ['待经理审核', '待生产', '已驳回'];
+    if (reviewStatuses.includes(status)) {
+      if (!pin || !reviewer_name) {
+        return res.status(403).json({ error: 'PIN验证失败' });
+      }
+      const role = reviewer_role || (status === '待生产' ? 'manager' : 'supervisor');
+      if (!verifyPin(reviewer_name, pin, role)) {
+        return res.status(403).json({ error: 'PIN验证失败' });
+      }
+    }
+    updateStatus(type, req.params.id, status);
     res.json({ success: true });
   });
 
@@ -311,6 +368,36 @@ app.get('/api/injection-costs', (req, res) => {
     });
   });
   res.json(result);
+});
+
+// ─── PIN 验证接口 ────────────────────────────────────────────────────────────
+app.post('/api/verify-pin', (req, res) => {
+  const { name, pin, role } = req.body;
+  if (!name || !pin || !role) {
+    return res.json({ success: false });
+  }
+  res.json({ success: verifyPin(name, pin, role) });
+});
+
+app.post('/api/change-pin', (req, res) => {
+  const { name, old_pin, new_pin, role } = req.body;
+  if (!name || !old_pin || !new_pin || !role) {
+    return res.status(400).json({ error: '参数不完整' });
+  }
+  if (new_pin.length < 4) {
+    return res.status(400).json({ error: 'PIN码至少4位' });
+  }
+  if (!verifyPin(name, old_pin, role)) {
+    return res.status(403).json({ error: '原PIN码错误' });
+  }
+  const data = loadData();
+  const bucket = role === 'manager' ? 'manager' : 'supervisors';
+  if (!data.auth_pins[bucket][name]) {
+    return res.status(404).json({ error: '用户不存在' });
+  }
+  data.auth_pins[bucket][name] = hashPin(new_pin);
+  saveData(data);
+  res.json({ success: true });
 });
 
 // ─── 领料单 ───────────────────────────────────────────────────────────────────

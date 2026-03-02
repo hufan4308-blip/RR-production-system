@@ -136,31 +136,47 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-// ─── 经理 PIN 配置 ──────────────────────────────────────────────────────────
-const MANAGER_PIN = '6601';
+// PIN 已移至服务端验证，前端不存储任何 PIN
 const MANAGER_NAME = '易东存';
 
 // ─── 登录逻辑 ─────────────────────────────────────────────────────────────────
 let currentManager = null;
 let currentFilter = '';
 
-function doLogin() {
+async function doLogin() {
   const pin = document.getElementById('loginPin').value;
-  if (pin !== MANAGER_PIN) {
+  if (!pin) {
     document.getElementById('loginError').classList.remove('d-none');
-    document.getElementById('loginPin').value = '';
     document.getElementById('loginPin').focus();
     return;
   }
-  currentManager = MANAGER_NAME;
-  sessionStorage.setItem('mgr_name', MANAGER_NAME);
-  document.getElementById('loginError').classList.add('d-none');
-  showDashboard();
+  try {
+    const r = await fetch('/api/verify-pin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: MANAGER_NAME, pin, role: 'manager' })
+    });
+    const d = await r.json();
+    if (!d.success) {
+      document.getElementById('loginError').classList.remove('d-none');
+      document.getElementById('loginPin').value = '';
+      document.getElementById('loginPin').focus();
+      return;
+    }
+    currentManager = MANAGER_NAME;
+    sessionStorage.setItem('mgr_name', MANAGER_NAME);
+    sessionStorage.setItem('mgr_pin', pin);
+    document.getElementById('loginError').classList.add('d-none');
+    showDashboard();
+  } catch (e) {
+    document.getElementById('loginError').classList.remove('d-none');
+  }
 }
 
 function doLogout() {
   currentManager = null;
   sessionStorage.removeItem('mgr_name');
+  sessionStorage.removeItem('mgr_pin');
   document.getElementById('loginSection').style.display = '';
   document.getElementById('dashSection').style.display = 'none';
   document.getElementById('loginPin').value = '';
@@ -307,35 +323,35 @@ function renderDetails(order) {
   return header + `<div class="table-responsive"><table class="table table-bordered table-sm"><thead class="table-light">${thead}</thead><tbody>${rows}</tbody></table></div>`;
 }
 
-function submitReview(action) {
+async function submitReview(action) {
   const rejectReason = document.getElementById('rejectReason').value.trim();
-  // 经理审核：通过直接进入待生产（不论当前是待审核还是待经理审核）
   const newStatus = action === 'approve' ? '待生产' : '已驳回';
+  const pin = sessionStorage.getItem('mgr_pin') || '';
 
-  const doUpdate = action === 'reject'
-    ? fetch(`/api/injection/${reviewingId}`)
-        .then(r => r.json())
-        .then(order => {
-          const { items, ...header } = order;
-          return fetch(`/api/injection/${reviewingId}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ ...header, status: newStatus, reason: rejectReason, items })
-          });
-        })
-    : fetch(`/api/injection/${reviewingId}/status`, {
+  try {
+    if (action === 'reject') {
+      const order = await (await fetch(`/api/injection/${reviewingId}`)).json();
+      const { items, ...header } = order;
+      await fetch(`/api/injection/${reviewingId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...header, status: newStatus, reason: rejectReason, items })
+      });
+    } else {
+      const resp = await fetch(`/api/injection/${reviewingId}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: newStatus })
+        body: JSON.stringify({ status: newStatus, pin, reviewer_name: MANAGER_NAME, reviewer_role: 'manager' })
       });
-
-  doUpdate
-    .then(() => {
-      bootstrap.Modal.getInstance(document.getElementById('reviewModal'))?.hide();
-      showToast(action === 'approve' ? '经理审核通过！单据已进入待生产' : '已驳回', action === 'approve' ? 'success' : 'danger');
-      loadOrders();
-    })
-    .catch(() => showToast('操作失败', 'danger'));
+      const result = await resp.json();
+      if (result.error) { showToast(result.error, 'danger'); return; }
+    }
+    bootstrap.Modal.getInstance(document.getElementById('reviewModal'))?.hide();
+    showToast(action === 'approve' ? '经理审核通过！单据已进入待生产' : '已驳回', action === 'approve' ? 'success' : 'danger');
+    loadOrders();
+  } catch (e) {
+    showToast('操作失败', 'danger');
+  }
 }
 
 // ─── 工具 ─────────────────────────────────────────────────────────────────────
@@ -349,9 +365,21 @@ function showToast(msg, type = 'success') {
 
 // ─── 自动恢复登录 session ──────────────────────────────────────────────────────
 const saved = sessionStorage.getItem('mgr_name');
-if (saved === MANAGER_NAME) {
-  currentManager = saved;
-  showDashboard();
+const savedPin = sessionStorage.getItem('mgr_pin');
+if (saved === MANAGER_NAME && savedPin) {
+  fetch('/api/verify-pin', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name: MANAGER_NAME, pin: savedPin, role: 'manager' })
+  }).then(r => r.json()).then(d => {
+    if (d.success) {
+      currentManager = saved;
+      showDashboard();
+    } else {
+      sessionStorage.removeItem('mgr_name');
+      sessionStorage.removeItem('mgr_pin');
+    }
+  });
 }
 </script>
 </body>
