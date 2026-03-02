@@ -1451,7 +1451,7 @@ function onExcelFileSelected() {
       const NUMERIC_FIELDS = ['shoot_qty','gross_weight_g','required_material_kg','unit_weight','sample_qty'];
 
       // 解析数据行
-      const items = dataRows.map(row => {
+      let items = dataRows.map(row => {
         const obj = {};
         Object.keys(idxMap).forEach(i => {
           let val = row[i];
