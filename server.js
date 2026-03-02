@@ -253,25 +253,25 @@ app.get('/api/material-stats', (req, res) => {
   // 如有月份、订单编号或车间过滤，先找出匹配的订单 ID 集合
   const orderSearch = req.query.order_number; // optional order number search
   const workshop = req.query.workshop; // optional workshop filter
-  let validOrderIds = null;
-  if (month || orderSearch || workshop) {
-    const q = (orderSearch || '').toLowerCase();
-    validOrderIds = new Set(
-      (data.injection_orders || [])
-        .filter(o => {
-          if (month && !(o.date || '').startsWith(month)) return false;
-          if (q && !((o.order_number || '') + (o.doc_number || '')).toLowerCase().includes(q)) return false;
-          if (workshop && o.workshop !== workshop) return false;
-          return true;
-        })
-        .map(o => o.id)
-    );
-  }
+  const APPROVED_S = ['待生产','生产中','已完成','已取消'];
+  // 始终只统计审核通过的订单
+  const q = (orderSearch || '').toLowerCase();
+  const validOrderIds = new Set(
+    (data.injection_orders || [])
+      .filter(o => {
+        if (!APPROVED_S.includes(o.status)) return false;
+        if (month && !(o.date || '').startsWith(month)) return false;
+        if (q && !((o.order_number || '') + (o.doc_number || '')).toLowerCase().includes(q)) return false;
+        if (workshop && o.workshop !== workshop) return false;
+        return true;
+      })
+      .map(o => o.id)
+  );
 
   // 累加 injection_items 里的仓库实填数据
   (data.injection_items || []).forEach(item => {
     if (!item.material) return;
-    if (validOrderIds && !validOrderIds.has(item.order_id)) return;
+    if (!validOrderIds.has(item.order_id)) return;
     if (!stats[item.material]) {
       stats[item.material] = {
         seq: Object.keys(stats).length + 1, material: item.material,
@@ -288,7 +288,8 @@ app.get('/api/material-stats', (req, res) => {
 app.get('/api/injection-costs', (req, res) => {
   const data = loadData();
   const month = req.query.month; // optional YYYY-MM filter
-  let orders = data.injection_orders || [];
+  const APPROVED = ['待生产','生产中','已完成','已取消'];
+  let orders = (data.injection_orders || []).filter(o => APPROVED.includes(o.status));
   if (month) orders = orders.filter(o => (o.date || '').startsWith(month));
   const items = data.injection_items || [];
   const result = [];
