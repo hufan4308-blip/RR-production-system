@@ -483,28 +483,26 @@ function renderOrderList(orders) {
   const isSpray = currentTab === 'spray';
   const rows = orders.map(o => `
     <tr class="order-row" style="cursor:pointer" onclick="viewOrderDetail(${o.id},'${(o.order_number||'').replace(/'/g,'')}')">
-      <td>${o.id}</td>
-      <td><strong>${o.order_number || '-'}</strong></td>
+      <td>${o.order_number || '-'}</td>
       <td>${o.product_name || '-'}</td>
       <td>${o.client_name || '-'}</td>
-      <td>${o.date || '-'}</td>
+      <td>${o.date ? o.date.slice(5) : '-'}</td>
       <td>${o.order_type || '-'}</td>
       <td>${o.workshop || '-'}</td>
       <td>${o.supervisor || '-'}</td>
       <td>${o.eng_name || '-'}</td>
       ${isSpray ? `<td style="color:#0d6efd;font-weight:500">${o.receive_time || '-'}</td><td style="color:#d63384;font-weight:500">${o.eng_complete_time || '-'}</td>` : ''}
-      <td>${o.reason || '-'}</td>
-      <td>
+      <td class="text-truncate" style="max-width:120px" title="${(o.reason||'').replace(/"/g,'&quot;')}">${o.reason || '-'}</td>
+      <td class="text-nowrap">
         ${statusBadge(o.status)}
-        ${engProblemsMap[o.id] ? `<span class="badge bg-danger ms-1" style="cursor:pointer" onclick="event.stopPropagation();viewEngProblems(${o.id},'${(o.order_number||'').replace(/'/g,'')}')"><i class="bi bi-exclamation-triangle-fill me-1"></i>${engProblemsMap[o.id]}个问题</span>` : ''}
+        ${engProblemsMap[o.id] ? `<span class="badge bg-danger ms-1" style="cursor:pointer" onclick="event.stopPropagation();viewEngProblems(${o.id},'${(o.order_number||'').replace(/'/g,'')}')"><i class="bi bi-exclamation-triangle-fill me-1"></i>${engProblemsMap[o.id]}</span>` : ''}
       </td>
-      <td>${fmtDate(o.created_at)}</td>
-      <td onclick="event.stopPropagation()">
+      <td class="text-nowrap" onclick="event.stopPropagation()">
         <div class="btn-group btn-group-sm">
-          ${(currentTab === 'injection' && (o.status === '待审核' || o.status === '待经理审核')) ? `<button class="btn ${o.status === '待经理审核' ? 'btn-primary' : 'btn-warning'} fw-bold" onclick="reviewOrder(${o.id},'${(o.order_number||'').replace(/'/g,'')}')"><i class="bi bi-shield-check me-1"></i>审核</button>` : ''}
-            <button class="btn btn-outline-primary"  onclick="editOrder(${o.id})" title="编辑"><i class="bi bi-pencil"></i></button>
-            <button class="btn btn-outline-danger"   onclick="deleteOrder(${o.id})" title="删除"><i class="bi bi-trash"></i></button>
-          <button class="btn btn-outline-success"    onclick="editOrder(${o.id},true)" title="复制此单新建"><i class="bi bi-copy"></i></button>
+          ${(currentTab === 'injection' && (o.status === '待审核' || o.status === '待经理审核')) ? `<button class="btn ${o.status === '待经理审核' ? 'btn-primary' : 'btn-warning'} fw-bold" onclick="reviewOrder(${o.id},'${(o.order_number||'').replace(/'/g,'')}')"><i class="bi bi-shield-check"></i></button>` : ''}
+          <button class="btn btn-outline-primary"  onclick="editOrder(${o.id})" title="编辑"><i class="bi bi-pencil"></i></button>
+          <button class="btn btn-outline-danger"   onclick="deleteOrder(${o.id})" title="删除"><i class="bi bi-trash"></i></button>
+          <button class="btn btn-outline-success"   onclick="editOrder(${o.id},true)" title="复制"><i class="bi bi-copy"></i></button>
           <button class="btn btn-outline-secondary"  onclick="printOrder(${o.id})" title="打印"><i class="bi bi-printer"></i></button>
           ${engProblemsMap[o.id] ? `<button class="btn btn-danger" onclick="viewEngProblems(${o.id},'${(o.order_number||'').replace(/'/g,'')}')" title="查看问题"><i class="bi bi-exclamation-triangle-fill"></i></button>` : ''}
         </div>
@@ -512,12 +510,12 @@ function renderOrderList(orders) {
     </tr>`).join('');
 
   document.getElementById('orderList').innerHTML = `
-    <table class="table table-hover table-sm mb-0">
+    <table class="table table-hover table-sm mb-0" style="font-size:.82rem">
       <thead class="table-dark">
         <tr>
-          <th>ID</th><th>产品编号</th><th>产品名称</th><th>客名</th><th>日期</th><th>类型</th><th>车间</th><th>主管</th><th>跟进工程师</th>
-          ${isSpray ? `<th style="color:#7eb8ff">收到胶件时间</th><th style="color:#f9a8d4">工程预计完成时间</th>` : ''}
-          <th>原因</th><th>状态</th><th>创建时间</th><th>操作</th>
+          <th>产品编号</th><th>产品名称</th><th>客名</th><th>日期</th><th>类型</th><th>车间</th><th>主管</th><th>工程师</th>
+          ${isSpray ? `<th style="color:#7eb8ff">收到胶件</th><th style="color:#f9a8d4">预计完成</th>` : ''}
+          <th>原因</th><th>状态</th><th>操作</th>
         </tr>
       </thead>
       <tbody>${rows}</tbody>
