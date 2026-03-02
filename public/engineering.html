@@ -1486,9 +1486,58 @@ function onExcelFileSelected() {
         return true;
       });
 
-      // 排模表模式：只保留有原料的模具主行，排除子行和汇总区
+      // 排模表模式：重建列表，包含模具主行 + 零件子行
       if (isPaiMoBiao) {
-        items = items.filter(obj => obj.mold_id && obj.material);
+        const partNumCol  = headers.findIndex(h => normCol(h).includes('零件编号'));
+        const partNameCol = headers.findIndex(h => normCol(h).includes('物料名称'));
+        const moldCol = headers.findIndex(h => normCol(h) === normCol('工模编号'));
+        const qtyCol  = headers.findIndex(h => normCol(h) === normCol('套数'));
+
+        const rebuilt = [];
+        let currentMold = null;
+        let subCount = 0;
+
+        dataRows.forEach(row => {
+          const moldId  = moldCol >= 0 ? String(row[moldCol] || '').trim() : '';
+          const partNum = partNumCol >= 0 ? String(row[partNumCol] || '').trim() : '';
+
+          if (moldId) {
+            // 解析模具主行
+            const obj = {};
+            Object.keys(idxMap).forEach(i => {
+              let val = row[i];
+              if (val === null || val === undefined) return;
+              val = String(val).trim();
+              if (val && val !== '0') {
+                const field = idxMap[i];
+                if (NUMERIC_FIELDS.includes(field)) {
+                  const num = val.replace(/[^\d.\-]/g, '');
+                  if (num) val = num;
+                }
+                obj[field] = val;
+              }
+            });
+            if (!obj.material) return; // 跳过汇总区
+            currentMold = obj;
+            subCount = 0;
+            rebuilt.push(obj);
+          } else if (partNum && currentMold) {
+            // 零件子行
+            const qty = qtyCol >= 0 ? String(row[qtyCol] || '').trim() : '';
+            // 第一个子行的套数合并到模具主行
+            if (subCount === 0 && !currentMold.quantity && qty && qty !== '0') {
+              currentMold.quantity = qty;
+            }
+            rebuilt.push({
+              _isSubRow: true,
+              mold_id: partNum,
+              mold_name: partNameCol >= 0 ? String(row[partNameCol] || '').trim() : '',
+              quantity: qty || ''
+            });
+            subCount++;
+          }
+        });
+        items = rebuilt;
       }
 
       if (!items.length) { showToast('表头下方没有有效数据行', 'warning'); return; }
@@ -1500,7 +1549,10 @@ function onExcelFileSelected() {
         // 空工模编号 = 同模子件，继承上一行工模编号并用子件样式
         let lastMoldId = '';
         items.forEach(it => {
-          if (it.mold_id) {
+          if (it._isSubRow) {
+            delete it._isSubRow;
+            addInjRow(it, true);
+          } else if (it.mold_id) {
             lastMoldId = it.mold_id;
             addInjRow(it, false);
           } else {
@@ -1513,8 +1565,10 @@ function onExcelFileSelected() {
           else addSprayRow(it);
         });
       }
+      const moldCount = items.filter(it => !it._isSubRow && it.mold_id).length;
+      const subRowCount = items.length - moldCount;
       showToast(isPaiMoBiao
-        ? `已识别排模表格式，成功导入 ${items.length} 个模具`
+        ? `已识别排模表，导入 ${moldCount} 个模具` + (subRowCount ? `、${subRowCount} 个零件` : '')
         : `已从第${headerRowIdx+1}行识别表头，成功导入 ${items.length} 行`, 'success');
     } catch(err) {
       showToast('解析失败：' + err.message, 'danger');
