@@ -219,6 +219,28 @@ app.use(express.static(path.join(__dirname, 'public')));
         return res.status(403).json({ error: 'PIN验证失败' });
       }
     }
+    // 模厂特殊处理：经理审核通过（待生产）→ 直接设为已完成，并自动计算料费
+    if (status === '待生产' && type === 'injection') {
+      const data = loadData();
+      const order = data.injection_orders.find(o => o.id === +req.params.id);
+      if (order && order.workshop === '模厂') {
+        order.status = '已完成';
+        order.updated_at = new Date().toISOString();
+        order.completed_date = new Date().toLocaleDateString('zh-CN', { timeZone: 'Asia/Shanghai' }).replace(/\//g, '-');
+        // 自动计算料费：actual_weight_kg = required_material_kg, actual_amount_hkd = weight × unit_price
+        const priceMap = {};
+        (data.material_prices || []).forEach(p => { priceMap[p.material] = +(p.unit_price || 0); });
+        const items = data.injection_items.filter(i => i.order_id === +req.params.id);
+        items.forEach(item => {
+          const weight = +(item.required_material_kg || 0);
+          const price = priceMap[item.material] || 0;
+          item.actual_weight_kg = weight;
+          item.actual_amount_hkd = Math.round(weight * price * 100) / 100;
+        });
+        saveData(data);
+        return res.json({ success: true, auto_completed: true });
+      }
+    }
     updateStatus(type, req.params.id, status);
     res.json({ success: true });
   });
@@ -389,6 +411,24 @@ app.get('/api/injection-costs', (req, res) => {
     });
   });
   res.json(result);
+});
+
+// ─── 待审核提醒 ─────────────────────────────────────────────────────────────
+app.get('/api/pending-reviews', (req, res) => {
+  const data = loadData();
+  const role = req.query.role;           // 'supervisor' or 'manager'
+  const name = req.query.name ? decodeURIComponent(req.query.name) : '';
+  const orders = data.injection_orders || [];
+
+  if (role === 'supervisor' && name) {
+    const pending = orders.filter(o => o.status === '待审核' && o.supervisor === name);
+    return res.json({ count: pending.length, orders: pending.map(o => ({ id: o.id, order_number: o.order_number, client_name: o.client_name, date: o.date })) });
+  }
+  if (role === 'manager') {
+    const pending = orders.filter(o => o.status === '待经理审核');
+    return res.json({ count: pending.length, orders: pending.map(o => ({ id: o.id, order_number: o.order_number, client_name: o.client_name, date: o.date, supervisor: o.supervisor })) });
+  }
+  res.json({ count: 0, orders: [] });
 });
 
 // ─── PIN 验证接口 ────────────────────────────────────────────────────────────
