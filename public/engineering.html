@@ -109,6 +109,12 @@
           <div class="col-md-3"><label class="form-label fw-bold">客名</label>
             <select class="form-select" id="inj-client_name">
               <option value="">请选择客户</option>
+              <option>ZURU</option><option>JAZWARES</option><option>Moose</option><option>TOMY</option>
+              <option>Tigerhead</option><option>Zanzoon(嘉苏)</option><option>AZAD</option>
+              <option>Brybelly +Entertoymen</option><option>Lifelines</option><option>ToyMonster</option>
+              <option>Cepia</option><option>Tikino</option><option>Sky Castle</option>
+              <option>Masterkidz</option><option>John Adams</option><option>智海鑫</option>
+              <option>PWP(多美）</option><option>CareFocus</option>
             </select>
           </div>
           <div class="col-md-3"><label class="form-label fw-bold">日期</label><input type="date" class="form-control" id="inj-date"></div>
@@ -1503,13 +1509,17 @@ document.addEventListener('mouseup', e => {
 let _matPrices = [];
 fetch('/api/material-prices').then(r => r.json()).then(p => { _matPrices = p; });
 
-// 加载客户列表
+// 客户列表（已内置在HTML中，API动态同步）
 let _clientList = [];
 fetch('/api/clients').then(r => r.json()).then(clients => {
   _clientList = clients;
+  // 同步：如果API有新客户而HTML没有，追加进去
   const sel = document.getElementById('inj-client_name');
-  if (sel) clients.forEach(c => { const o = document.createElement('option'); o.value = c; o.textContent = c; sel.appendChild(o); });
-});
+  if (sel) {
+    const existing = new Set([...sel.options].map(o => o.value));
+    clients.forEach(c => { if (!existing.has(c)) { const o = document.createElement('option'); o.value = c; o.textContent = c; sel.appendChild(o); } });
+  }
+}).catch(() => {});
 
 loadOrders();
 setInterval(() => { loadOrders(); checkForNewCompletions(); }, 30000);
