@@ -307,18 +307,24 @@ app.get('/api/material-stats', (req, res) => {
     };
   });
 
-  // 如有月份、订单编号或车间过滤，先找出匹配的订单 ID 集合
+  // 如有月份、订单编号、产品编号、客名或车间过滤，先找出匹配的订单 ID 集合
   const orderSearch = req.query.order_number; // optional order number search
   const workshop = req.query.workshop; // optional workshop filter
+  const docSearch = req.query.doc_number; // optional product number search
+  const clientSearch = req.query.client_name; // optional client name search
   const APPROVED_S = ['待生产','生产中','已完成','已取消'];
   // 始终只统计审核通过的订单
   const q = (orderSearch || '').toLowerCase();
+  const dq = (docSearch || '').toLowerCase();
+  const cq = (clientSearch || '').toLowerCase();
   const validOrderIds = new Set(
     (data.injection_orders || [])
       .filter(o => {
         if (!APPROVED_S.includes(o.status)) return false;
         if (month && !(o.date || '').startsWith(month)) return false;
         if (q && !((o.order_number || '') + (o.doc_number || '')).toLowerCase().includes(q)) return false;
+        if (dq && !(o.doc_number || '').toLowerCase().includes(dq)) return false;
+        if (cq && !(o.client_name || '').toLowerCase().includes(cq)) return false;
         if (workshop && o.workshop !== workshop) return false;
         return true;
       })

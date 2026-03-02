@@ -93,7 +93,7 @@
             <option value="湖南车间">湖南车间</option>
             <option value="模厂">模厂</option>
           </select>
-          <div class="input-group input-group-sm" style="width:200px">
+          <div class="input-group input-group-sm" style="width:180px">
             <span class="input-group-text"><i class="bi bi-search"></i></span>
             <input type="text" class="form-control" id="matOrderSearch"
               placeholder="搜索订单编号..." autocomplete="off">
@@ -102,7 +102,25 @@
               <i class="bi bi-x-lg"></i>
             </button>
           </div>
-          <div class="input-group input-group-sm" style="width:200px">
+          <div class="input-group input-group-sm" style="width:180px">
+            <span class="input-group-text"><i class="bi bi-box-seam"></i></span>
+            <input type="text" class="form-control" id="matProductSearch"
+              placeholder="搜索产品编号..." autocomplete="off">
+            <button class="btn btn-outline-secondary"
+              onclick="document.getElementById('matProductSearch').value='';loadStats()" title="清除">
+              <i class="bi bi-x-lg"></i>
+            </button>
+          </div>
+          <div class="input-group input-group-sm" style="width:160px">
+            <span class="input-group-text"><i class="bi bi-person"></i></span>
+            <input type="text" class="form-control" id="matClientSearch"
+              placeholder="搜索客名..." autocomplete="off">
+            <button class="btn btn-outline-secondary"
+              onclick="document.getElementById('matClientSearch').value='';loadStats()" title="清除">
+              <i class="bi bi-x-lg"></i>
+            </button>
+          </div>
+          <div class="input-group input-group-sm" style="width:180px">
             <span class="input-group-text"><i class="bi bi-search"></i></span>
             <input type="text" class="form-control" id="matSearch"
               placeholder="搜索原料型号..." oninput="renderStats()" autocomplete="off">
@@ -162,12 +180,30 @@
             <option value="湖南车间">湖南车间</option>
             <option value="模厂">模厂</option>
           </select>
-          <div class="input-group input-group-sm" style="width:220px">
+          <div class="input-group input-group-sm" style="width:180px">
             <span class="input-group-text"><i class="bi bi-search"></i></span>
             <input type="text" class="form-control" id="costSearch"
               placeholder="搜索订单编号..." oninput="renderCostData()" autocomplete="off">
             <button class="btn btn-outline-secondary"
               onclick="document.getElementById('costSearch').value='';renderCostData()" title="清除">
+              <i class="bi bi-x-lg"></i>
+            </button>
+          </div>
+          <div class="input-group input-group-sm" style="width:180px">
+            <span class="input-group-text"><i class="bi bi-box-seam"></i></span>
+            <input type="text" class="form-control" id="costProductSearch"
+              placeholder="搜索产品编号..." oninput="renderCostData()" autocomplete="off">
+            <button class="btn btn-outline-secondary"
+              onclick="document.getElementById('costProductSearch').value='';renderCostData()" title="清除">
+              <i class="bi bi-x-lg"></i>
+            </button>
+          </div>
+          <div class="input-group input-group-sm" style="width:160px">
+            <span class="input-group-text"><i class="bi bi-person"></i></span>
+            <input type="text" class="form-control" id="costClientSearch"
+              placeholder="搜索客名..." oninput="renderCostData()" autocomplete="off">
+            <button class="btn btn-outline-secondary"
+              onclick="document.getElementById('costClientSearch').value='';renderCostData()" title="清除">
               <i class="bi bi-x-lg"></i>
             </button>
           </div>
@@ -600,8 +636,10 @@ fetch('/api/material-prices').then(r => r.json()).then(prices => {
 loadOrders();
 setInterval(loadOrders, 30000);
 
-// 订单编号搜索：按回车触发查询
+// 搜索框：按回车触发查询
 document.getElementById('matOrderSearch')?.addEventListener('keydown', e => { if (e.key === 'Enter') loadStats(); });
+document.getElementById('matProductSearch')?.addEventListener('keydown', e => { if (e.key === 'Enter') loadStats(); });
+document.getElementById('matClientSearch')?.addEventListener('keydown', e => { if (e.key === 'Enter') loadStats(); });
 
 // ── 标签页切换 ──────────────────────────────────────────────────────────────
 function switchInjTab(name, el) {
@@ -621,10 +659,14 @@ function loadStats() {
   const month = document.getElementById('matMonth')?.value || '';
   const orderQ = document.getElementById('matOrderSearch')?.value.trim() || '';
   const workshop = document.getElementById('matWorkshop')?.value || '';
+  const productQ = document.getElementById('matProductSearch')?.value.trim() || '';
+  const clientQ = document.getElementById('matClientSearch')?.value.trim() || '';
   const params = new URLSearchParams();
   if (month) params.set('month', month);
   if (orderQ) params.set('order_number', orderQ);
   if (workshop) params.set('workshop', workshop);
+  if (productQ) params.set('doc_number', productQ);
+  if (clientQ) params.set('client_name', clientQ);
   const statsUrl = '/api/material-stats' + (params.toString() ? '?' + params : '');
   Promise.all([
     fetch(statsUrl).then(r => r.json()),
@@ -659,12 +701,17 @@ function loadCostData() {
 function renderCostData() {
   const q = (document.getElementById('costSearch')?.value || '').trim().toLowerCase();
   const ws = document.getElementById('costWorkshop')?.value || '';
+  const pq = (document.getElementById('costProductSearch')?.value || '').trim().toLowerCase();
+  const cq = (document.getElementById('costClientSearch')?.value || '').trim().toLowerCase();
   let filtered = costData;
   if (ws) filtered = filtered.filter(it => it.workshop === ws);
   if (q) filtered = filtered.filter(it => ((it.order_number || '') + (it.doc_number || '')).toLowerCase().includes(q));
+  if (pq) filtered = filtered.filter(it => (it.doc_number || '').toLowerCase().includes(pq));
+  if (cq) filtered = filtered.filter(it => (it.client_name || '').toLowerCase().includes(cq));
 
+  const hasFilter = q || pq || cq || ws;
   if (!filtered.length) {
-    document.getElementById('costBody').innerHTML = `<tr><td colspan="11" class="text-center text-muted p-3">${q ? '没有匹配的订单' : '暂无数据'}</td></tr>`;
+    document.getElementById('costBody').innerHTML = `<tr><td colspan="11" class="text-center text-muted p-3">${hasFilter ? '没有匹配的订单' : '暂无数据'}</td></tr>`;
     return;
   }
 
@@ -690,7 +737,7 @@ function renderCostData() {
       </tr>`;
   });
 
-  const hint = q ? `（匹配 ${filtered.length} / ${costData.length} 条）` : `（共 ${filtered.length} 条）`;
+  const hint = hasFilter ? `（匹配 ${filtered.length} / ${costData.length} 条）` : `（共 ${filtered.length} 条）`;
   document.getElementById('costBody').innerHTML = rows.join('') + `
     <tr style="font-weight:700;background:#f0f7f0">
       <td colspan="9" class="text-end">合计${hint}</td>
