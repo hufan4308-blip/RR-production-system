@@ -639,7 +639,20 @@ fetch('/api/clients').then(r => r.json()).then(clients => {
     const sel = document.getElementById(id);
     if (sel) clients.forEach(c => { const o = document.createElement('option'); o.value = c; o.textContent = c; sel.appendChild(o); });
   });
-});
+}).catch(e => console.error('加载客户列表失败:', e));
+
+// 备用：从已有订单中提取客户（若API加载失败）
+setTimeout(() => {
+  if (document.getElementById('matClientFilter')?.options.length <= 1) {
+    fetch('/api/injection').then(r => r.json()).then(orders => {
+      const clients = [...new Set(orders.map(o => o.client_name).filter(Boolean))].sort();
+      ['matClientFilter', 'costClientFilter'].forEach(id => {
+        const sel = document.getElementById(id);
+        if (sel && sel.options.length <= 1) clients.forEach(c => { const o = document.createElement('option'); o.value = c; o.textContent = c; sel.appendChild(o); });
+      });
+    }).catch(() => {});
+  }
+}, 2000);
 
 // ── 标签页切换 ──────────────────────────────────────────────────────────────
 function switchInjTab(name, el) {
