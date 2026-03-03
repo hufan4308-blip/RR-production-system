@@ -705,7 +705,12 @@ document.addEventListener('scroll', () => {
 function matDropFilter(inp) {
   _matDropInp = inp;
   const q = inp.value.trim().toLowerCase();
-  const matches = q ? _matPrices.filter(p => p.material.toLowerCase().includes(q)) : _matPrices;
+  const qNorm = q.replace(/[\s（）()【】\[\]]/g, '');
+  const matches = q ? _matPrices.filter(p => {
+    const mLow = p.material.toLowerCase();
+    const mNorm = mLow.replace(/[\s（）()【】\[\]]/g, '');
+    return mLow.includes(q) || mNorm.includes(qNorm);
+  }) : _matPrices;
   _matDropEl.innerHTML = matches.slice(0, 80).map(p =>
     `<div style="padding:5px 10px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"
       onmousedown="matDropPick(this,'${p.material.replace(/'/g,"\\'")}')"
@@ -1505,6 +1510,20 @@ function onExcelFileSelected() {
       // 排模表模式：只保留有原料的模具主行（整啤模腔数→件数）
       if (isPaiMoBiao) {
         items = items.filter(obj => obj.mold_id && obj.material);
+      }
+
+      // 模糊匹配原料名称：去除括号/空格等格式差异，匹配已有料价
+      if (_excelImportType === 'injection' && _matPrices.length) {
+        const normMat = s => String(s).replace(/[\s（）()【】\[\]]/g, '').toLowerCase();
+        const priceMap = {};
+        _matPrices.forEach(p => { priceMap[normMat(p.material)] = p.material; });
+        items.forEach(it => {
+          if (!it.material) return;
+          const exact = _matPrices.some(p => p.material === it.material);
+          if (exact) return;
+          const canon = priceMap[normMat(it.material)];
+          if (canon) it.material = canon;
+        });
       }
 
       if (!items.length) { showToast('表头下方没有有效数据行', 'warning'); return; }
