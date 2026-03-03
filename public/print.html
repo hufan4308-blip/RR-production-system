@@ -192,6 +192,20 @@
       const engineer  = v(o.eng_name);
       const supervisor = v(o.supervisor);
 
+      // 原料汇总（从明细行动态统计）
+      const _matAgg = {};
+      items.forEach(it => { if (it.material) _matAgg[it.material] = (_matAgg[it.material]||0) + (parseFloat(it.required_material_kg)||0); });
+      const _matList = Object.keys(_matAgg).filter(k => _matAgg[k] > 0);
+      const _matTot = _matList.reduce((s, k) => s + _matAgg[k], 0);
+      const matSummaryHtml = _matList.length ? `<div style="flex-shrink:0">
+        <table style="border-collapse:collapse;font-size:7.5pt">
+          <thead><tr><th style="border:1px solid #333;padding:1px 4px;background:#e8e8e8">原料</th><th style="border:1px solid #333;padding:1px 4px;background:#e8e8e8">用料(KG)</th><th style="border:1px solid #333;padding:1px 4px;background:#e8e8e8">比例</th></tr></thead>
+          <tbody>${_matList.map(m => '<tr><td style="border:1px solid #333;padding:1px 4px">'+m+'</td><td style="border:1px solid #333;padding:1px 4px;text-align:right">'+_matAgg[m].toFixed(2)+'</td><td style="border:1px solid #333;padding:1px 4px;text-align:right">'+(_matTot?(_matAgg[m]/_matTot*100).toFixed(1):0)+'%</td></tr>').join('')}
+          <tr style="font-weight:700"><td style="border:1px solid #333;padding:1px 4px">合计</td><td style="border:1px solid #333;padding:1px 4px;text-align:right">${_matTot.toFixed(2)}</td><td style="border:1px solid #333;padding:1px 4px;text-align:right">100%</td></tr>
+          </tbody>
+        </table>
+      </div>` : '';
+
       return `
         <div class="print-header" style="margin-bottom:4px">
           <div class="company-name">${companyName}</div>
@@ -239,20 +253,7 @@
 4.胶件颜色必须对到样板或色牌，需调色啤办单注明调色，需通知本人对色。
 5.胶件需摆放整齐，避免胶件刮花。
 6.150吨及以下机型给3KG，150吨及以上机型给5KG。</div>
-          ${(() => {
-            const ma = {}; items.forEach(it => { if (it.material) ma[it.material] = (ma[it.material]||0) + (parseFloat(it.required_material_kg)||0); });
-            const me = Object.entries(ma).filter(([,kg]) => kg > 0);
-            if (!me.length) return '';
-            const mt = me.reduce((s,[,kg]) => s+kg, 0);
-            return `<div style="flex-shrink:0">
-              <table style="border-collapse:collapse;font-size:7.5pt">
-                <thead><tr><th style="border:1px solid #333;padding:1px 4px;background:#e8e8e8">原料</th><th style="border:1px solid #333;padding:1px 4px;background:#e8e8e8">用料(KG)</th><th style="border:1px solid #333;padding:1px 4px;background:#e8e8e8">比例</th></tr></thead>
-                <tbody>${me.map(([m,kg]) => `<tr><td style="border:1px solid #333;padding:1px 4px">${m}</td><td style="border:1px solid #333;padding:1px 4px;text-align:right">${kg.toFixed(2)}</td><td style="border:1px solid #333;padding:1px 4px;text-align:right">${(mt?(kg/mt*100).toFixed(1):0)}%</td></tr>`).join('')}
-                <tr style="font-weight:700"><td style="border:1px solid #333;padding:1px 4px">合计</td><td style="border:1px solid #333;padding:1px 4px;text-align:right">${mt.toFixed(2)}</td><td style="border:1px solid #333;padding:1px 4px;text-align:right">100%</td></tr>
-                </tbody>
-              </table>
-            </div>`;
-          })()
+          ${matSummaryHtml}
         </div>
         <div style="border:1px solid #333;border-top:none;padding:4px 8px;font-size:8.5pt">
           <strong>分发：</strong>□经理室&emsp;&emsp;&emsp;□业务部&emsp;&emsp;&emsp;&emsp;□啤机部&emsp;&emsp;&emsp;&emsp;□喷油部&emsp;&emsp;&emsp;□装配部&emsp;&emsp;&emsp;□QC部
