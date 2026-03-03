@@ -1405,9 +1405,29 @@ function onExcelFileSelected() {
       const dataRows = allRows.slice(headerRowIdx + 1);
       const colMap = EXCEL_COL_MAP[_excelImportType] || {};
 
-      // ── 排模表检测 ──
+      // ── 排模表检测 + 预处理：拼接件数/套数 ──
       const isPaiMoBiao = _excelImportType === 'injection'
         && headers.some(h => normCol(h).includes('零件编号'));
+      if (isPaiMoBiao) {
+        const moldCol   = headers.findIndex(h => normCol(h) === normCol('工模编号'));
+        const cavityCol = headers.findIndex(h => normCol(h).includes('整啤模腔数'));
+        const suiteCol  = headers.findIndex(h => normCol(h) === normCol('套数'));
+        if (moldCol >= 0 && cavityCol >= 0 && suiteCol >= 0) {
+          for (let i = 0; i < dataRows.length; i++) {
+            const row = dataRows[i];
+            if (row[moldCol] && row[cavityCol]) {
+              // 从下方第一个子行取套数，拼成 "件数/套数"
+              for (let j = i + 1; j < dataRows.length; j++) {
+                if (dataRows[j][moldCol]) break;
+                if (dataRows[j][suiteCol]) {
+                  row[cavityCol] = String(row[cavityCol]).trim() + '/' + String(dataRows[j][suiteCol]).trim();
+                  break;
+                }
+              }
+            }
+          }
+        }
+      }
 
       // 建立 列索引 → 字段名 映射（优先精确匹配，再取最长子串匹配）
       const idxMap = {};
