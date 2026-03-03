@@ -500,15 +500,24 @@ function viewOrder(id) {
           </table>
         </div>`;
 
-      // 原料汇总表（排模表导入时保存的）
-      if (order.material_summary && order.material_summary.length) {
+      // 原料汇总表（从明细行自动统计）
+      const _matAgg = {};
+      items.forEach(it => {
+        if (!it.material) return;
+        _matAgg[it.material] = (_matAgg[it.material] || 0) + (parseFloat(it.required_material_kg) || 0);
+      });
+      const _matEntries = Object.entries(_matAgg).filter(([,kg]) => kg > 0);
+      if (_matEntries.length) {
+        const _matTotal = _matEntries.reduce((s,[,kg]) => s + kg, 0);
         document.getElementById('detailBody').innerHTML += `
         <div style="margin-top:10px">
           <table class="table table-bordered table-sm" style="width:auto;font-size:.82rem;margin:0">
-            <thead><tr style="background:#e8f0fe"><th>料型</th><th>用量 (g)</th><th>比例</th></tr></thead>
-            <tbody>${order.material_summary.map(r =>
-              `<tr><td>${r.material}</td><td class="text-end">${r.weight_g}</td><td class="text-end">${r.ratio}</td></tr>`
-            ).join('')}</tbody>
+            <thead><tr style="background:#e8f0fe"><th>原料</th><th>所需用料 (KG)</th><th>比例</th></tr></thead>
+            <tbody>${_matEntries.map(([mat, kg]) =>
+              `<tr><td>${mat}</td><td class="text-end">${kg.toFixed(2)}</td><td class="text-end">${(_matTotal ? (kg/_matTotal*100).toFixed(1) : 0)}%</td></tr>`
+            ).join('')}
+            <tr style="font-weight:700;background:#f0f7f0"><td>合计</td><td class="text-end">${_matTotal.toFixed(2)}</td><td class="text-end">100%</td></tr>
+            </tbody>
           </table>
         </div>`;
       }
