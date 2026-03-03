@@ -69,12 +69,19 @@
   </div>
 
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <script src="utils.js"></script>
   <script>
     const params = new URLSearchParams(location.search);
     const type = params.get('type');
     const id   = params.get('id');
 
     const typeMap = { injection: '啤办单', slush: '搪胶单', spray: '喷油单' };
+
+    // 参数白名单校验
+    if (!typeMap[type] || !/^\d+$/.test(id)) {
+      document.getElementById('loading').textContent = '参数错误：无效的单据类型或ID';
+      throw new Error('Invalid params');
+    }
 
     fetch(`/api/${type}/${id}`)
       .then(r => r.json())
@@ -104,7 +111,7 @@
     function ck(checked) {
       return `<span class="cb-box${checked ? ' checked' : ''}">${checked ? '√' : ''}</span>`;
     }
-    function v(val) { return val || ''; }
+    function v(val) { return esc(val || ''); }
 
     function renderInjection(o) {
       const items = o.items || [];
@@ -192,16 +199,13 @@
       const engineer  = v(o.eng_name);
       const supervisor = v(o.supervisor);
 
-      // 原料汇总（从明细行动态统计）
-      const _matAgg = {};
-      items.forEach(it => { if (it.material) _matAgg[it.material] = (_matAgg[it.material]||0) + (parseFloat(it.required_material_kg)||0); });
-      const _matList = Object.keys(_matAgg).filter(k => _matAgg[k] > 0);
-      const _matTot = _matList.reduce((s, k) => s + _matAgg[k], 0);
-      const matSummaryHtml = _matList.length ? `<div style="flex-shrink:0">
+      // 原料汇总（从明细行动态统计，使用共享函数）
+      const _ms = calcMatSummary(items);
+      const matSummaryHtml = _ms.entries.length ? `<div style="flex-shrink:0">
         <table style="border-collapse:collapse;font-size:7.5pt">
-          <thead><tr><th style="border:1px solid #333;padding:1px 4px;background:#e8e8e8">原料</th><th style="border:1px solid #333;padding:1px 4px;background:#e8e8e8">用料(KG)</th><th style="border:1px solid #333;padding:1px 4px;background:#e8e8e8">比例</th></tr></thead>
-          <tbody>${_matList.map(m => '<tr><td style="border:1px solid #333;padding:1px 4px">'+m+'</td><td style="border:1px solid #333;padding:1px 4px;text-align:right">'+_matAgg[m].toFixed(2)+'</td><td style="border:1px solid #333;padding:1px 4px;text-align:right">'+(_matTot?(_matAgg[m]/_matTot*100).toFixed(1):0)+'%</td></tr>').join('')}
-          <tr style="font-weight:700"><td style="border:1px solid #333;padding:1px 4px">合计</td><td style="border:1px solid #333;padding:1px 4px;text-align:right">${_matTot.toFixed(2)}</td><td style="border:1px solid #333;padding:1px 4px;text-align:right">100%</td></tr>
+          <thead><tr><th style="border:1px solid #333;padding:1px 4px;background:#e8e8e8">原料</th><th style="border:1px solid #333;padding:1px 4px;background:#e8e8e8">用料(KG)</th></tr></thead>
+          <tbody>${_ms.entries.map(function(e) { return '<tr><td style="border:1px solid #333;padding:1px 4px">'+esc(e[0])+'</td><td style="border:1px solid #333;padding:1px 4px;text-align:right">'+e[1].toFixed(2)+'</td></tr>'; }).join('')}
+          <tr style="font-weight:700"><td style="border:1px solid #333;padding:1px 4px">合计</td><td style="border:1px solid #333;padding:1px 4px;text-align:right">${_ms.total.toFixed(2)}</td></tr>
           </tbody>
         </table>
       </div>` : '';
@@ -217,7 +221,7 @@
           <span style="flex:3;text-align:right"><strong>订单编号：</strong>${v(o.doc_number)}</span>
         </div>
         <div style="border:1px solid #333;border-top:none;border-bottom:none;padding:4px 8px;font-size:10pt;display:flex;gap:0">
-          <span style="flex:2"><strong>车间：</strong>${v(o.workshop)}</span>
+          <span style="flex:2"><strong>车间：</strong>${v(o.workshop)}${o.send_to ? '（'+v(o.send_to)+'）' : ''}</span>
           <span style="flex:2;text-align:right"><strong>日期：</strong>${v(o.date)}</span>
         </div>
         ${cbSection}

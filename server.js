@@ -21,15 +21,19 @@ try {
   console.warn('Warning: default-material-prices.json not found, starting with empty prices');
 }
 
+let _cache = null;
+
 function loadData() {
-  if (!fs.existsSync(DATA_FILE)) return initData();
+  if (_cache) return JSON.parse(JSON.stringify(_cache));
+  if (!fs.existsSync(DATA_FILE)) { _cache = initData(); return JSON.parse(JSON.stringify(_cache)); }
   try {
     const data = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
     if (!data.material_prices || data.material_prices.length === 0) data.material_prices = DEFAULT_MATERIAL_PRICES.slice();
     if (!data.material_requisitions) data.material_requisitions = [];
-    return data;
+    _cache = data;
+    return JSON.parse(JSON.stringify(_cache));
   }
-  catch (e) { return initData(); }
+  catch (e) { _cache = initData(); return JSON.parse(JSON.stringify(_cache)); }
 }
 
 function initData() {
@@ -45,6 +49,7 @@ function initData() {
 }
 
 function saveData(data) {
+  _cache = data;
   const tmp = DATA_FILE + '.tmp';
   fs.writeFileSync(tmp, JSON.stringify(data, null, 2), 'utf8');
   fs.renameSync(tmp, DATA_FILE);
@@ -125,32 +130,13 @@ function hashPin(pin) {
   return crypto.createHash('sha256').update(String(pin)).digest('hex');
 }
 
-// 默认 PIN（仅用于首次初始化迁移）
-const DEFAULT_PINS = {
-  supervisors: {
-    '段新辉': '6602', '唐海林': '6603', '蒙海欢': '6604',
-    '万志勇': '6605', '章发东': '6606', '刘际维': '6607',
-    '甘勇辉': '6608', '王玉国': '6609'
-  },
-  manager: { '易东存': '6601' }
-};
-
-// 服务启动时初始化 PIN 哈希
+// PIN 已迁移到 data.json 的 auth_pins（哈希存储），源码不再保存明文 PIN
 (function initPins() {
   const data = loadData();
   if (!data.auth_pins) {
-    data.auth_pins = {
-      supervisors: {},
-      manager: {}
-    };
-    for (const [name, pin] of Object.entries(DEFAULT_PINS.supervisors)) {
-      data.auth_pins.supervisors[name] = hashPin(pin);
-    }
-    for (const [name, pin] of Object.entries(DEFAULT_PINS.manager)) {
-      data.auth_pins.manager[name] = hashPin(pin);
-    }
+    data.auth_pins = { supervisors: {}, manager: {} };
     saveData(data);
-    console.log('PIN codes migrated to server-side hashed storage');
+    console.warn('WARNING: auth_pins not found. PINs must be set via /api/change-pin.');
   }
 })();
 
@@ -176,6 +162,20 @@ app.use((req, res, next) => {
   next();
 });
 app.use(express.static(path.join(__dirname, 'public')));
+
+// ─── 写操作认证中间件 ─────────────────────────────────────────────────────────
+app.use('/api', (req, res, next) => {
+  if (req.method === 'GET') return next();
+  // PATCH /status 已有 PIN 验证
+  if (req.method === 'PATCH' && req.path.match(/\/\d+\/status$/)) return next();
+  // 认证端点本身不需要 X-User
+  if (req.path === '/verify-pin' || req.path === '/change-pin') return next();
+  const user = req.headers['x-user'];
+  if (!user || !decodeURIComponent(user).trim()) {
+    return res.status(401).json({ error: '未授权：请登录后操作' });
+  }
+  next();
+});
 
 // ─── 路由工厂 ─────────────────────────────────────────────────────────────────
 ['injection', 'slush', 'spray'].forEach(type => {
@@ -219,11 +219,11 @@ app.use(express.static(path.join(__dirname, 'public')));
         return res.status(403).json({ error: 'PIN验证失败' });
       }
     }
-    // 模厂特殊处理：经理审核通过（待生产）→ 直接设为已完成，并自动计算料费
+    // 发至模厂特殊处理：经理审核通过（待生产）→ 直接设为已完成，并自动计算料费
     if (status === '待生产' && type === 'injection') {
       const data = loadData();
       const order = data.injection_orders.find(o => o.id === +req.params.id);
-      if (order && order.workshop === '模厂') {
+      if (order && (order.send_to === '发至模厂' || order.workshop === '模厂')) {
         order.status = '已完成';
         order.updated_at = new Date().toISOString();
         order.completed_date = new Date().toLocaleDateString('zh-CN', { timeZone: 'Asia/Shanghai' }).replace(/\//g, '-');
@@ -241,6 +241,18 @@ app.use(express.static(path.join(__dirname, 'public')));
         return res.json({ success: true, auto_completed: true });
       }
     }
+    // 驳回时保存原因
+    if (status === '已驳回' && req.body.reason) {
+      const data = loadData();
+      const order = data[`${type}_orders`].find(o => o.id === +req.params.id);
+      if (order) {
+        order.status = status;
+        order.reject_reason = req.body.reason;
+        order.updated_at = new Date().toISOString();
+        saveData(data);
+        return res.json({ success: true });
+      }
+    }
     updateStatus(type, req.params.id, status);
     res.json({ success: true });
   });
@@ -251,11 +263,11 @@ app.use(express.static(path.join(__dirname, 'public')));
       const data = loadData();
       const updates = req.body.updates || [];
       const items = data[`${type}_items`];
+      const ITEM_WHITELIST = ['receipt_no','collected_weight_kg','actual_weight_kg','actual_amount_hkd','injection_cost'];
       updates.forEach(u => {
         const item = items.find(i => i.id === +u.id && i.order_id === +req.params.id);
         if (item) {
-          const { id: _id, order_id: _oid, sort_order: _so, ...fields } = u;
-          Object.assign(item, fields);
+          ITEM_WHITELIST.forEach(f => { if (f in u) item[f] = u[f]; });
         }
       });
       saveData(data);
@@ -308,6 +320,9 @@ app.get('/api/clients', (req, res) => {
 
 app.put('/api/clients', (req, res) => {
   try {
+    if (!Array.isArray(req.body) || !req.body.every(c => typeof c === 'string')) {
+      return res.status(400).json({ error: '客户列表格式错误：需要字符串数组' });
+    }
     const data = loadData();
     data.clients = req.body;
     saveData(data);
@@ -323,6 +338,9 @@ app.get('/api/material-prices', (req, res) => {
 
 app.put('/api/material-prices', (req, res) => {
   try {
+    if (!Array.isArray(req.body) || !req.body.every(p => p && typeof p === 'object' && typeof p.material === 'string')) {
+      return res.status(400).json({ error: '原料价格格式错误：需要含 material 字段的对象数组' });
+    }
     const data = loadData();
     data.material_prices = req.body;
     saveData(data);
