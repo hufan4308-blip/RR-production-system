@@ -678,8 +678,16 @@ function matDropShow(inp) {
 }
 function _matDropPos(inp) {
   const r = inp.getBoundingClientRect();
+  // 如果输入框滚出可视区域，隐藏下拉
+  const wrap = inp.closest('.items-table-wrap');
+  if (wrap) {
+    const wr = wrap.getBoundingClientRect();
+    if (r.bottom < wr.top || r.top > wr.bottom) {
+      _matDropEl.style.display = 'none';
+      return;
+    }
+  }
   const spaceBelow = window.innerHeight - r.bottom;
-  const spaceAbove = r.top;
   // 优先向下，空间不够则向上
   if (spaceBelow >= 200) {
     _matDropEl.style.top = r.bottom + 2 + 'px';
@@ -690,6 +698,10 @@ function _matDropPos(inp) {
   }
   _matDropEl.style.left = Math.max(4, Math.min(r.left, window.innerWidth - 290)) + 'px';
 }
+// 滚动时重新定位下拉框
+document.addEventListener('scroll', () => {
+  if (_matDropInp && _matDropEl.style.display !== 'none') _matDropPos(_matDropInp);
+}, true);
 function matDropFilter(inp) {
   _matDropInp = inp;
   const q = inp.value.trim().toLowerCase();
