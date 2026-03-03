@@ -231,13 +231,21 @@
           </thead>
           <tbody>${rows}</tbody>
         </table>
-        <div style="border:1px solid #333;border-top:none;padding:6px 8px;font-size:8pt;line-height:1.9;white-space:pre-line">备注：
+        <div style="border:1px solid #333;border-top:none;padding:6px 8px;font-size:8pt;display:flex;gap:12px">
+          <div style="flex:1;line-height:1.9;white-space:pre-line">备注：
 1.试模请写报告。
 2.每套模留10啤，不需剪水口，每啤分开装再装入一个大袋。
 3.啤机必须洗干净，不能有遗留黑点和杂色，顶针位不能有油污。
 4.胶件颜色必须对到样板或色牌，需调色啤办单注明调色，需通知本人对色。
 5.胶件需摆放整齐，避免胶件刮花。
 6.150吨及以下机型给3KG，150吨及以上机型给5KG。</div>
+          ${(o.material_summary && o.material_summary.length) ? `<div style="flex-shrink:0">
+            <table style="border-collapse:collapse;font-size:7.5pt">
+              <thead><tr><th style="border:1px solid #333;padding:1px 4px;background:#e8e8e8">料型</th><th style="border:1px solid #333;padding:1px 4px;background:#e8e8e8">用量(g)</th><th style="border:1px solid #333;padding:1px 4px;background:#e8e8e8">比例</th></tr></thead>
+              <tbody>${o.material_summary.map(r => `<tr><td style="border:1px solid #333;padding:1px 4px">${r.material}</td><td style="border:1px solid #333;padding:1px 4px;text-align:right">${r.weight_g}</td><td style="border:1px solid #333;padding:1px 4px;text-align:right">${r.ratio}</td></tr>`).join('')}</tbody>
+            </table>
+          </div>` : ''}
+        </div>
         <div style="border:1px solid #333;border-top:none;padding:4px 8px;font-size:8.5pt">
           <strong>分发：</strong>□经理室&emsp;&emsp;&emsp;□业务部&emsp;&emsp;&emsp;&emsp;□啤机部&emsp;&emsp;&emsp;&emsp;□喷油部&emsp;&emsp;&emsp;□装配部&emsp;&emsp;&emsp;□QC部
         </div>

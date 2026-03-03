@@ -162,6 +162,7 @@
             <tbody id="injItemsBody"></tbody>
           </table>
         </div>
+        <div id="injMatSummary" style="display:none;margin-top:10px"></div>
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
@@ -567,7 +568,7 @@ function openNewModal() {
 
   const showModal = () => {
     document.getElementById(bodyId).innerHTML = '';
-    if (currentTab === 'injection') addInjRow();
+    if (currentTab === 'injection') { addInjRow(); _paimoSummary = null; renderMatSummary('injMatSummary', null); }
     else if (currentTab === 'slush') addSlushRow();
     else addSprayRow();
     new bootstrap.Modal(document.getElementById(modalId)).show();
@@ -623,6 +624,11 @@ function editOrder(id, isDuplicate = false) {
           else if (currentTab === 'slush') addSlushRow(it);
           else addSprayRow(it);
         });
+        // 恢复原料汇总显示
+        if (currentTab === 'injection') {
+          _paimoSummary = order.material_summary || null;
+          renderMatSummary('injMatSummary', _paimoSummary);
+        }
         new bootstrap.Modal(document.getElementById(modalId)).show();
       };
 
@@ -721,7 +727,7 @@ function matDropFilter(inp) {
   _matDropEl.style.display = '';
 }
 function matDropPick(el, val) {
-  if (_matDropInp) { _matDropInp.value = val; _matDropInp.title = val; }
+  if (_matDropInp) { _matDropInp.value = val; _matDropInp.title = val; _matDropInp.style.border = ''; }
   _matDropEl.style.display = 'none';
   _matDropInp = null;
 }
@@ -759,6 +765,15 @@ function addInjRow(it={}, isSubRow=false) {
     <td>${inp('text','notes',it.notes||'注塑')}</td>
     <td>${injDelBtn()}</td>`;
   document.getElementById('injItemsBody').appendChild(tr);
+  // 未匹配原料：红框提示，placeholder 显示原始名称
+  if (it._matUnmatched) {
+    const matInp = tr.querySelector('[name="material"]');
+    if (matInp) {
+      matInp.style.border = '2px solid #dc3545';
+      matInp.placeholder = it._matUnmatched + '（未匹配，请手动选择）';
+      matInp.title = '原始原料：' + it._matUnmatched;
+    }
+  }
 }
 
 // 在当前行下方插入同一工模的子件行（除工模名称外全部复制）
@@ -856,7 +871,8 @@ function saveOrder(type) {
     eng_complete_time: (type === 'spray' ? document.getElementById('spray-eng_complete_time')?.value : null) || null,
     items: type === 'injection' ? collectRows('injItemsBody', injFields)
          : type === 'slush'     ? collectRows('slushItemsBody', slushFields)
-         :                        collectRows('sprayItemsBody', sprayFields)
+         :                        collectRows('sprayItemsBody', sprayFields),
+    material_summary: type === 'injection' ? (_paimoSummary || null) : undefined
   };
 
   const url    = id ? `/api/${type}/${id}` : `/api/${type}`;
@@ -1512,17 +1528,36 @@ function onExcelFileSelected() {
         items = items.filter(obj => obj.mold_id && obj.material);
       }
 
-      // 模糊匹配原料名称：去除括号/空格等格式差异，匹配已有料价
+      // 模糊匹配原料名称：先精确→去符号→相似度≥70%，找不到则清空让工程师手动选
       if (_excelImportType === 'injection' && _matPrices.length) {
-        const normMat = s => String(s).replace(/[\s（）()【】\[\]]/g, '').toLowerCase();
-        const priceMap = {};
-        _matPrices.forEach(p => { priceMap[normMat(p.material)] = p.material; });
+        const normMat = s => String(s).replace(/[\s（）()【】\[\]#]/g, '').toLowerCase();
+        // 最长公共子序列相似度
+        function similarity(a, b) {
+          const m = a.length, n = b.length;
+          if (!m || !n) return 0;
+          const dp = Array.from({length: m+1}, () => new Uint16Array(n+1));
+          for (let i = 1; i <= m; i++)
+            for (let j = 1; j <= n; j++)
+              dp[i][j] = a[i-1] === b[j-1] ? dp[i-1][j-1]+1 : Math.max(dp[i-1][j], dp[i][j-1]);
+          return dp[m][n] / Math.max(m, n);
+        }
+        const priceNorms = _matPrices.map(p => ({ name: p.material, norm: normMat(p.material) }));
         items.forEach(it => {
           if (!it.material) return;
-          const exact = _matPrices.some(p => p.material === it.material);
-          if (exact) return;
-          const canon = priceMap[normMat(it.material)];
-          if (canon) it.material = canon;
+          // 1) 精确匹配
+          if (_matPrices.some(p => p.material === it.material)) return;
+          // 2) 去符号精确匹配
+          const itNorm = normMat(it.material);
+          const exactNorm = priceNorms.find(p => p.norm === itNorm);
+          if (exactNorm) { it.material = exactNorm.name; return; }
+          // 3) 相似度匹配（≥70%）
+          let bestName = null, bestScore = 0;
+          priceNorms.forEach(p => {
+            const s = similarity(itNorm, p.norm);
+            if (s > bestScore) { bestScore = s; bestName = p.name; }
+          });
+          if (bestScore >= 0.7) { it.material = bestName; }
+          else { it._matUnmatched = it.material; it.material = ''; }
         });
       }
 
@@ -1548,6 +1583,31 @@ function onExcelFileSelected() {
           else addSprayRow(it);
         });
       }
+      // 排模表：提取底部原料汇总表（料型 / 用量(g) / 比例）
+      _paimoSummary = null;
+      if (isPaiMoBiao) {
+        for (let i = headerRowIdx + 1; i < allRows.length; i++) {
+          const cell = String(allRows[i][0] || '').trim();
+          if (cell === '料型') {
+            const summary = [];
+            for (let j = i + 1; j < allRows.length; j++) {
+              const m = String(allRows[j][0] || '').trim();
+              if (!m || m === '合计') break;
+              summary.push({
+                material: m,
+                weight_g: String(allRows[j][1] || '').trim(),
+                ratio: String(allRows[j][2] || '').trim()
+              });
+            }
+            if (summary.length) _paimoSummary = summary;
+            break;
+          }
+        }
+        renderMatSummary('injMatSummary', _paimoSummary);
+      } else {
+        document.getElementById('injMatSummary').style.display = 'none';
+      }
+
       showToast(isPaiMoBiao
         ? `已识别排模表，导入 ${items.length} 个模具`
         : `已从第${headerRowIdx+1}行识别表头，成功导入 ${items.length} 行`, 'success');
@@ -1600,6 +1660,21 @@ document.addEventListener('mouseup', e => {
 // ─── 初始化 ───────────────────────────────────────────────────────────────────
 let _matPrices = [];
 fetch('/api/material-prices').then(r => r.json()).then(p => { _matPrices = p; });
+
+// ─── 排模表原料汇总 ──────────────────────────────────────────────────────────
+let _paimoSummary = null;
+function renderMatSummary(containerId, summary) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  if (!summary || !summary.length) { el.style.display = 'none'; return; }
+  el.style.display = '';
+  el.innerHTML = `<table class="table table-bordered table-sm" style="width:auto;font-size:.82rem;margin:0">
+    <thead><tr style="background:#e8f0fe"><th>料型</th><th>用量 (g)</th><th>比例</th></tr></thead>
+    <tbody>${summary.map(r =>
+      `<tr><td>${r.material}</td><td class="text-end">${r.weight_g}</td><td class="text-end">${r.ratio}</td></tr>`
+    ).join('')}</tbody>
+  </table>`;
+}
 
 // 客户列表（已内置在HTML中，API动态同步）
 let _clientList = [];
