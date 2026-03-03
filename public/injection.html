@@ -115,6 +115,12 @@
           </div>
           <select id="matClientFilter" class="form-select form-select-sm" style="width:auto" onchange="loadStats()">
             <option value="">全部客户</option>
+            <option>ZURU</option><option>JAZWARES</option><option>Moose</option><option>TOMY</option>
+            <option>Tigerhead</option><option>Zanzoon(嘉苏)</option><option>AZAD</option>
+            <option>Brybelly +Entertoymen</option><option>Lifelines</option><option>ToyMonster</option>
+            <option>Cepia</option><option>Tikino</option><option>Sky Castle</option>
+            <option>Masterkidz</option><option>John Adams</option><option>智海鑫</option>
+            <option>PWP(多美）</option><option>CareFocus</option>
           </select>
           <div class="input-group input-group-sm" style="width:180px">
             <span class="input-group-text"><i class="bi bi-search"></i></span>
@@ -196,6 +202,12 @@
           </div>
           <select id="costClientFilter" class="form-select form-select-sm" style="width:auto" onchange="renderCostData()">
             <option value="">全部客户</option>
+            <option>ZURU</option><option>JAZWARES</option><option>Moose</option><option>TOMY</option>
+            <option>Tigerhead</option><option>Zanzoon(嘉苏)</option><option>AZAD</option>
+            <option>Brybelly +Entertoymen</option><option>Lifelines</option><option>ToyMonster</option>
+            <option>Cepia</option><option>Tikino</option><option>Sky Castle</option>
+            <option>Masterkidz</option><option>John Adams</option><option>智海鑫</option>
+            <option>PWP(多美）</option><option>CareFocus</option>
           </select>
           <button class="btn btn-sm btn-outline-secondary" onclick="loadCostData()">
             <i class="bi bi-arrow-clockwise me-1"></i>刷新数据
@@ -633,26 +645,15 @@ setInterval(loadOrders, 30000);
 document.getElementById('matOrderSearch')?.addEventListener('keydown', e => { if (e.key === 'Enter') loadStats(); });
 document.getElementById('matProductSearch')?.addEventListener('keydown', e => { if (e.key === 'Enter') loadStats(); });
 
-// 加载客户列表到下拉框
+// 客户列表已在HTML中硬编码，如有新客户会通过API动态追加
 fetch('/api/clients').then(r => r.json()).then(clients => {
   ['matClientFilter', 'costClientFilter'].forEach(id => {
     const sel = document.getElementById(id);
-    if (sel) clients.forEach(c => { const o = document.createElement('option'); o.value = c; o.textContent = c; sel.appendChild(o); });
+    if (!sel) return;
+    const existing = new Set(Array.from(sel.options).map(o => o.value));
+    clients.forEach(c => { if (!existing.has(c)) { const o = document.createElement('option'); o.value = c; o.textContent = c; sel.appendChild(o); } });
   });
-}).catch(e => console.error('加载客户列表失败:', e));
-
-// 备用：从已有订单中提取客户（若API加载失败）
-setTimeout(() => {
-  if (document.getElementById('matClientFilter')?.options.length <= 1) {
-    fetch('/api/injection').then(r => r.json()).then(orders => {
-      const clients = [...new Set(orders.map(o => o.client_name).filter(Boolean))].sort();
-      ['matClientFilter', 'costClientFilter'].forEach(id => {
-        const sel = document.getElementById(id);
-        if (sel && sel.options.length <= 1) clients.forEach(c => { const o = document.createElement('option'); o.value = c; o.textContent = c; sel.appendChild(o); });
-      });
-    }).catch(() => {});
-  }
-}, 2000);
+}).catch(() => {});
 
 // ── 标签页切换 ──────────────────────────────────────────────────────────────
 function switchInjTab(name, el) {
