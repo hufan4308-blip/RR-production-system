@@ -219,20 +219,24 @@ app.use('/api', (req, res, next) => {
         return res.status(403).json({ error: 'PIN验证失败' });
       }
     }
-    // 发至模厂特殊处理：经理审核通过（待生产）→ 直接设为已完成，并自动计算料费
+    // 发至模厂/发至湖南：经理审核通过（待生产）→ 直接设为已完成，实际用料=领料重量，自动计算料金额
     if (status === '待生产' && type === 'injection') {
       const data = loadData();
       const order = data.injection_orders.find(o => o.id === +req.params.id);
-      if (order && (order.send_to === '发至模厂' || order.workshop === '模厂')) {
+      const isAutoComplete = order && (
+        order.send_to === '发至模厂' || order.send_to === '发至湖南' ||
+        order.workshop === '模厂'
+      );
+      if (isAutoComplete) {
         order.status = '已完成';
         order.updated_at = new Date().toISOString();
         order.completed_date = new Date().toLocaleDateString('zh-CN', { timeZone: 'Asia/Shanghai' }).replace(/\//g, '-');
-        // 自动计算料费：actual_weight_kg = required_material_kg, actual_amount_hkd = weight × unit_price
+        // 实际用料 = 领料重量，用料金额 = 领料重量 × 单价
         const priceMap = {};
         (data.material_prices || []).forEach(p => { priceMap[p.material] = +(p.unit_price || 0); });
         const items = data.injection_items.filter(i => i.order_id === +req.params.id);
         items.forEach(item => {
-          const weight = +(item.required_material_kg || 0);
+          const weight = +(item.collected_weight_kg || 0);
           const price = priceMap[item.material] || 0;
           item.actual_weight_kg = weight;
           item.actual_amount_hkd = Math.round(weight * price * 100) / 100;
