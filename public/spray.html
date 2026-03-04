@@ -126,15 +126,22 @@ function renderOrders(orders) {
   const rows = orders.map(o => {
     const provideTime = o.receive_time || '-';
     const engTime = o.eng_complete_time || '-';
+    const actualReceive = o.actual_receive_time || '';
     return `
     <tr class="order-row" onclick="viewOrder(${o.id})">
       <td><strong>${esc(o.order_number || '-')}</strong></td>
-      <td>${esc(o.date || '-')}</td>
+      <td>${esc(o.date ? o.date.slice(5) : '-')}</td>
       <td>${esc(o.order_type || '-')}</td>
       <td>${esc(o.workshop || '-')}</td>
       <td>${esc(o.eng_name || '-')}</td>
       <td style="color:#0d6efd;font-weight:500">${esc(provideTime)}</td>
       <td style="color:#d63384;font-weight:500">${esc(engTime)}</td>
+      <td onclick="event.stopPropagation()">
+        <input type="date" class="form-control form-control-sm" style="min-width:120px"
+          value="${esc(actualReceive)}"
+          onchange="saveActualReceive(${o.id}, this.value)"
+          title="实际收到胶件日期">
+      </td>
       <td>${esc(o.reason || '-')}</td>
       <td>
         ${statusBadge(o.status)}
@@ -161,6 +168,7 @@ function renderOrders(orders) {
           <th>订单编号</th><th>日期</th><th>类型</th><th>车间</th><th>跟进工程师</th>
           <th style="color:#7eb8ff">收到胶件时间</th>
           <th style="color:#f9a8d4">工程预计完成时间</th>
+          <th style="color:#86efac">实际收到胶件</th>
           <th>原因</th><th>状态</th><th>处理</th>
         </tr>
       </thead>
@@ -275,6 +283,14 @@ function setStatus(id, status) {
     headers: { 'Content-Type': 'application/json', 'X-User': encodeURIComponent('喷油部') },
     body: JSON.stringify({ status })
   }).then(() => loadOrders());
+}
+
+function saveActualReceive(id, value) {
+  fetch(`/api/spray/${id}/actual-receive`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', 'X-User': encodeURIComponent('喷油部') },
+    body: JSON.stringify({ actual_receive_time: value })
+  }).then(r => { if (!r.ok) alert('保存失败，请重试'); });
 }
 
 function printOrder(id) {

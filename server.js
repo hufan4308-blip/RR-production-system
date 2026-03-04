@@ -465,6 +465,17 @@ app.get('/api/pending-reviews', (req, res) => {
   res.json({ count: 0, orders: [] });
 });
 
+// ─── 喷油部：实际收到胶件时间 ────────────────────────────────────────────────
+app.patch('/api/spray/:id/actual-receive', (req, res) => {
+  const data = loadData();
+  const order = data.spray_orders.find(o => o.id === +req.params.id);
+  if (!order) return res.status(404).json({ error: '未找到' });
+  order.actual_receive_time = req.body.actual_receive_time || null;
+  order.updated_at = new Date().toISOString();
+  saveData(data);
+  res.json({ success: true });
+});
+
 // ─── PIN 验证接口 ────────────────────────────────────────────────────────────
 app.post('/api/verify-pin', (req, res) => {
   const { name, pin, role } = req.body;

@@ -487,13 +487,13 @@ function renderOrderList(orders) {
   const isSpray = currentTab === 'spray';
   const rows = orders.map(o => `
     <tr class="order-row" style="cursor:pointer" onclick="viewOrderDetail(${o.id},'${(o.order_number||'').replace(/'/g,'')}')">
-      <td>${esc(o.order_number || '-')}</td>
+      ${!isSpray ? `<td>${esc(o.order_number || '-')}</td>` : ''}
       <td>${esc(o.product_name || '-')}</td>
       <td>${esc(o.client_name || '-')}</td>
       <td>${esc(o.date ? o.date.slice(5) : '-')}</td>
       <td>${esc(o.order_type || '-')}</td>
       <td>${esc(o.workshop || '-')}${o.send_to ? ' <span class="badge bg-info text-dark">'+esc(o.send_to)+'</span>' : ''}</td>
-      <td>${esc(o.supervisor || '-')}</td>
+      ${!isSpray ? `<td>${esc(o.supervisor || '-')}</td>` : ''}
       <td>${esc(o.eng_name || '-')}</td>
       ${isSpray ? `<td style="color:#0d6efd;font-weight:500">${esc(o.receive_time || '-')}</td><td style="color:#d63384;font-weight:500">${esc(o.eng_complete_time || '-')}</td>` : ''}
       <td class="text-truncate" style="max-width:120px" title="${esc(o.reason||'')}">${esc(o.reason || '-')}</td>
@@ -517,7 +517,10 @@ function renderOrderList(orders) {
     <table class="table table-hover table-sm mb-0" style="font-size:.82rem">
       <thead class="table-dark">
         <tr>
-          <th>产品编号</th><th>产品名称</th><th>客名</th><th>日期</th><th>类型</th><th>车间</th><th>主管</th><th>工程师</th>
+          ${!isSpray ? '<th>产品编号</th>' : ''}
+          <th>产品名称</th><th>客名</th><th>日期</th><th>类型</th><th>车间</th>
+          ${!isSpray ? '<th>主管</th>' : ''}
+          <th>工程师</th>
           ${isSpray ? `<th style="color:#7eb8ff">收到胶件</th><th style="color:#f9a8d4">预计完成</th>` : ''}
           <th>原因</th><th>状态</th><th>操作</th>
         </tr>
