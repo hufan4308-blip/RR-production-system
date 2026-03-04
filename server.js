@@ -241,7 +241,7 @@ app.use('/api', (req, res, next) => {
         (data.material_prices || []).forEach(p => { priceMap[p.material] = +(p.unit_price || 0); });
         const items = data.injection_items.filter(i => i.order_id === +req.params.id);
         items.forEach(item => {
-          const weight = +(item.collected_weight_kg || 0);
+          const weight = +(item.collected_weight_kg || item.required_material_kg || 0);
           const price = priceMap[item.material] || 0;
           item.actual_weight_kg = weight;
           item.actual_amount_hkd = Math.round(weight * price * 100) / 100;
@@ -479,7 +479,7 @@ app.post('/api/injection/:id/auto-complete', (req, res) => {
   (data.material_prices || []).forEach(p => { priceMap[p.material] = +(p.unit_price || 0); });
   const items = data.injection_items.filter(i => i.order_id === +req.params.id);
   items.forEach(item => {
-    const weight = +(item.collected_weight_kg || 0);
+    const weight = +(item.collected_weight_kg || item.required_material_kg || 0);
     const price = priceMap[item.material] || 0;
     item.actual_weight_kg = weight;
     item.actual_amount_hkd = Math.round(weight * price * 100) / 100;
