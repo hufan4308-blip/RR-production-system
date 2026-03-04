@@ -34,6 +34,7 @@
       <button id="notifBtn" class="btn btn-sm btn-outline-light" onclick="toggleNotifications()" title="点击开启完成通知">
         <i class="bi bi-bell" id="notifIcon"></i>
       </button>
+      <span id="navUserBadge" class="badge bg-light text-dark" style="font-size:.85rem;cursor:pointer" onclick="switchUser()" title="点击切换用户"></span>
       <a href="index.html"     class="nav-dept-link"><i class="bi bi-house me-1"></i>主页</a>
       <a href="injection.html" class="nav-dept-link">啤机部</a>
       <a href="slush.html"     class="nav-dept-link">搪胶部</a>
@@ -870,9 +871,10 @@ function saveOrder(type) {
          :                        collectRows('sprayItemsBody', sprayFields),
   };
 
+  if (!currentUser) { showLoginModal(); return; }
   const url    = id ? `/api/${type}/${id}` : `/api/${type}`;
   const method = id ? 'PUT' : 'POST';
-  const hdrs   = { 'Content-Type': 'application/json' };
+  const hdrs   = { 'Content-Type': 'application/json', 'X-User': encodeURIComponent(currentUser) };
 
   fetch(url, { method, headers: hdrs, body: JSON.stringify(body) })
     .then(r => r.json())
@@ -1672,8 +1674,64 @@ fetch('/api/clients').then(r => r.json()).then(clients => {
   }
 }).catch(() => {});
 
+// ─── 用户登录 ─────────────────────────────────────────────────────────────────
+let currentUser = sessionStorage.getItem('eng_user') || '';
+
+function showLoginModal() {
+  new bootstrap.Modal(document.getElementById('engLoginModal')).show();
+  document.getElementById('engLoginName').focus();
+}
+
+function doLogin() {
+  const name = document.getElementById('engLoginName').value.trim();
+  if (!name) { document.getElementById('engLoginName').classList.add('is-invalid'); return; }
+  document.getElementById('engLoginName').classList.remove('is-invalid');
+  currentUser = name;
+  sessionStorage.setItem('eng_user', name);
+  document.getElementById('navUserBadge').textContent = '👤 ' + name;
+  bootstrap.Modal.getInstance(document.getElementById('engLoginModal'))?.hide();
+}
+
+function switchUser() {
+  sessionStorage.removeItem('eng_user');
+  currentUser = '';
+  document.getElementById('engLoginName').value = '';
+  showLoginModal();
+}
+
+// 初始化用户
+if (currentUser) {
+  document.getElementById('navUserBadge').textContent = '👤 ' + currentUser;
+} else {
+  // 延迟等 bootstrap 加载完
+  window.addEventListener('load', showLoginModal);
+}
+
 loadOrders();
 setInterval(() => { loadOrders(); checkForNewCompletions(); }, 30000);
 </script>
+
+<!-- ─── 登录 Modal ─────────────────────────────────────────────────────────── -->
+<div class="modal fade" id="engLoginModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+  <div class="modal-dialog modal-sm modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header" style="background:#1a3a6c;color:#fff">
+        <h5 class="modal-title"><i class="bi bi-person-circle me-2"></i>请登录</h5>
+      </div>
+      <div class="modal-body">
+        <label class="form-label fw-bold">您的姓名</label>
+        <input type="text" id="engLoginName" class="form-control" placeholder="输入您的姓名"
+          onkeydown="if(event.key==='Enter')doLogin()">
+        <div class="invalid-feedback">请输入姓名</div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary w-100" onclick="doLogin()">
+          <i class="bi bi-box-arrow-in-right me-1"></i>确认登录
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
