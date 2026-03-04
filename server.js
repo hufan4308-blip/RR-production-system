@@ -465,6 +465,29 @@ app.get('/api/pending-reviews', (req, res) => {
   res.json({ count: 0, orders: [] });
 });
 
+// ─── 发至订单手动触发完成并计算料费 ──────────────────────────────────────────
+app.post('/api/injection/:id/auto-complete', (req, res) => {
+  const data = loadData();
+  const order = data.injection_orders.find(o => o.id === +req.params.id);
+  if (!order) return res.status(404).json({ error: '未找到' });
+  const isSendTo = order.send_to === '发至模厂' || order.send_to === '发至湖南' || order.workshop === '模厂';
+  if (!isSendTo) return res.status(400).json({ error: '该订单不是发至外厂订单' });
+  order.status = '已完成';
+  order.updated_at = new Date().toISOString();
+  order.completed_date = new Date().toLocaleDateString('zh-CN', { timeZone: 'Asia/Shanghai' }).replace(/\//g, '-');
+  const priceMap = {};
+  (data.material_prices || []).forEach(p => { priceMap[p.material] = +(p.unit_price || 0); });
+  const items = data.injection_items.filter(i => i.order_id === +req.params.id);
+  items.forEach(item => {
+    const weight = +(item.collected_weight_kg || 0);
+    const price = priceMap[item.material] || 0;
+    item.actual_weight_kg = weight;
+    item.actual_amount_hkd = Math.round(weight * price * 100) / 100;
+  });
+  saveData(data);
+  res.json({ success: true });
+});
+
 // ─── 喷油部：实际收到胶件时间 ────────────────────────────────────────────────
 app.patch('/api/spray/:id/actual-receive', (req, res) => {
   const data = loadData();

@@ -346,6 +346,7 @@ function renderOrders(orders) {
       <td>
         <div class="btn-group btn-group-sm">
           ${handleBtn(o.id, o.status)}
+          ${(o.send_to === '发至模厂' || o.send_to === '发至湖南' || o.workshop === '模厂') && o.status !== '已完成' ? `<button class="btn btn-teal" style="font-size:.75rem;padding:2px 7px;white-space:nowrap;background:#0d9488;color:#fff;border-color:#0d9488" onclick="event.stopPropagation();autoCompleteOrder(${o.id})" title="完成并计算料费"><i class="bi bi-check2-all me-1"></i>完成计算</button>` : ''}
           <button class="btn btn-outline-danger" onclick="event.stopPropagation();openProblemModal(${o.id},'${esc((o.order_number||'').replace(/'/g,''))}')" title="问题反馈">
             <i class="bi bi-exclamation-triangle"></i>
           </button>
@@ -606,6 +607,17 @@ function handleBtn(id, status) {
   if (status === '待生产') return `<button class="btn btn-warning" style="font-size:.75rem;padding:2px 7px;white-space:nowrap" onclick="event.stopPropagation();setStatus(${id},'生产中')" title="开始处理"><i class="bi bi-play-fill me-1"></i>开始处理</button>`;
   if (status === '生产中') return `<button class="btn btn-success" onclick="event.stopPropagation();setStatus(${id},'已完成')" title="标记完成"><i class="bi bi-check-lg me-1"></i>标记完成</button>`;
   return '';
+}
+
+function autoCompleteOrder(id) {
+  if (!confirm('将此发至订单标记为已完成，并以领料重量计算料费？')) return;
+  fetch(`/api/injection/${id}/auto-complete`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-User': encodeURIComponent('啤机部') }
+  }).then(r => r.json()).then(d => {
+    if (d.error) { alert(d.error); return; }
+    loadOrders();
+  }).catch(() => alert('操作失败，请重试'));
 }
 
 function setStatus(id, status) {
