@@ -939,7 +939,7 @@ function resolveProblem(problemId) {
 // ─── 删除/打印 ────────────────────────────────────────────────────────────────
 function deleteOrder(id) {
   if (!confirm(`确定删除这条单据吗？删除后无法恢复。`)) return;
-  fetch(`/api/${currentTab}/${id}`, { method: 'DELETE' })
+  fetch(`/api/${currentTab}/${id}`, { method: 'DELETE', headers: { 'X-User': encodeURIComponent(currentUser) } })
     .then(r => r.json())
     .then(d => {
       if (d.error) { showToast(d.error, 'danger'); return; }
